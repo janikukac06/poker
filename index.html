@@ -60,7 +60,7 @@
             justify-content: center;
             color: black;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 30px;
         }
         .card-back {
             background-image: linear-gradient(45deg, #5a8cc5 25%, #36648b 25%, #36648b 50%, #5a8cc5 50%, #5a8cc5 75%, #36648b 75%, #36648b 100%);
@@ -69,6 +69,71 @@
         }
         .player-info {
             margin-top: 5px;
+        }
+        .dealer-button {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: absolute;
+        }
+        .player .dealer-button {
+            bottom: 60px;
+            right: -15px;
+        }
+        .ai .dealer-button {
+            top: 60px;
+            right: -15px;
+        }
+        .blind {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: absolute;
+            font-size: 12px;
+        }
+        .small-blind {
+            background-color: white;
+            color: black;
+        }
+        .big-blind {
+            background-color: red;
+            color: white;
+        }
+        .player .blind {
+            bottom: 60px;
+            left: -15px;
+        }
+        .ai .blind {
+            top: 60px;
+            left: -15px;
+        }
+        .bet-amount {
+            position: absolute;
+            font-size: 16px;
+            font-weight: bold;
+            color: yellow;
+        }
+        .player .bet-amount {
+            top: -30px;
+        }
+        .ai .bet-amount {
+            bottom: -30px;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
         }
     </style>
     <script>
@@ -79,6 +144,17 @@
         let playerHand = [];
         let robotHand = [];
         let communityCards = [];
+        
+        // Game state
+        let isPlayerDealer = true; // Player starts as dealer
+        let smallBlindAmount = 10;
+        let bigBlindAmount = 20;
+        let playerChips = 1000;
+        let robotChips = 1000;
+        let potAmount = 0;
+        let playerBet = 0;
+        let robotBet = 0;
+        let currentBettingRound = 'none'; // none, preflop, flop, turn, river, showdown
         
         // Create and shuffle the deck
         function initializeDeck() {
@@ -194,8 +270,282 @@
 
         // Start a new game
         function startNewGame() {
+            // Reset game state
+            playerChips = 1000;
+            robotChips = 1000;
+            potAmount = 0;
+            playerBet = 0;
+            robotBet = 0;
+            
+            // Toggle dealer position for the next game
+            isPlayerDealer = !isPlayerDealer;
+            
+            // Initialize the deck and deal cards
             initializeDeck();
             dealCards();
+            
+            // Place blinds
+            placeBlinds();
+            
+            // Update UI
+            updateChips();
+            updateDealerButton();
+            updateBlinds();
+            
+            // Start preflop betting round
+            currentBettingRound = 'preflop';
+            
+            // Enable betting buttons
+            updateActionButtons();
+        }
+        
+        // Place blinds based on dealer position
+        function placeBlinds() {
+            if (isPlayerDealer) {
+                // Player is dealer, robot posts small blind, player posts big blind
+                robotBet = smallBlindAmount;
+                robotChips -= smallBlindAmount;
+                playerBet = bigBlindAmount;
+                playerChips -= bigBlindAmount;
+            } else {
+                // Robot is dealer, player posts small blind, robot posts big blind
+                playerBet = smallBlindAmount;
+                playerChips -= smallBlindAmount;
+                robotBet = bigBlindAmount;
+                robotChips -= bigBlindAmount;
+            }
+            
+            // Add blinds to the pot
+            potAmount = playerBet + robotBet;
+            
+            updateChips();
+        }
+        
+        // Update the chips display
+        function updateChips() {
+            document.querySelector('.ai p').textContent = `Robot: ${robotChips}`;
+            document.querySelector('.player-info').textContent = `Falatka: ${playerChips}`;
+            document.querySelector('.pot p').textContent = `Pot: ${potAmount}`;
+            
+            // Update bet amounts
+            let playerBetElement = document.querySelector('.player .bet-amount');
+            let robotBetElement = document.querySelector('.ai .bet-amount');
+            
+            if (playerBet > 0) {
+                playerBetElement.textContent = playerBet;
+                playerBetElement.style.display = 'block';
+            } else {
+                playerBetElement.style.display = 'none';
+            }
+            
+            if (robotBet > 0) {
+                robotBetElement.textContent = robotBet;
+                robotBetElement.style.display = 'block';
+            } else {
+                robotBetElement.style.display = 'none';
+            }
+        }
+        
+        // Update dealer button position
+        function updateDealerButton() {
+            let playerDealerButton = document.querySelector('.player .dealer-button');
+            let robotDealerButton = document.querySelector('.ai .dealer-button');
+            
+            if (isPlayerDealer) {
+                playerDealerButton.style.display = 'flex';
+                robotDealerButton.style.display = 'none';
+            } else {
+                playerDealerButton.style.display = 'none';
+                robotDealerButton.style.display = 'flex';
+            }
+        }
+        
+        // Update blinds indicators
+        function updateBlinds() {
+            let playerBlind = document.querySelector('.player .blind');
+            let robotBlind = document.querySelector('.ai .blind');
+            
+            if (isPlayerDealer) {
+                // Player is dealer, robot has small blind, player has big blind
+                playerBlind.textContent = 'BB';
+                playerBlind.classList.remove('small-blind');
+                playerBlind.classList.add('big-blind');
+                
+                robotBlind.textContent = 'SB';
+                robotBlind.classList.add('small-blind');
+                robotBlind.classList.remove('big-blind');
+            } else {
+                // Robot is dealer, player has small blind, robot has big blind
+                playerBlind.textContent = 'SB';
+                playerBlind.classList.add('small-blind');
+                playerBlind.classList.remove('big-blind');
+                
+                robotBlind.textContent = 'BB';
+                robotBlind.classList.remove('small-blind');
+                robotBlind.classList.add('big-blind');
+            }
+            
+            playerBlind.style.display = 'flex';
+            robotBlind.style.display = 'flex';
+        }
+        
+        // Player actions
+        function playerCheck() {
+            // Player can only check if robot hasn't bet more
+            if (robotBet <= playerBet) {
+                robotAction();
+            }
+        }
+        
+        function playerCall() {
+            // Match the robot's bet
+            const callAmount = robotBet - playerBet;
+            playerChips -= callAmount;
+            playerBet = robotBet;
+            potAmount += callAmount;
+            
+            updateChips();
+            robotAction();
+        }
+        
+        function playerRaise() {
+            // Raise by big blind amount
+            const raiseAmount = bigBlindAmount;
+            const totalBet = robotBet + raiseAmount - playerBet;
+            
+            playerChips -= totalBet;
+            playerBet = robotBet + raiseAmount;
+            potAmount += totalBet;
+            
+            updateChips();
+            robotAction();
+        }
+        
+        function playerFold() {
+            // Robot wins the pot
+            robotChips += potAmount;
+            potAmount = 0;
+            playerBet = 0;
+            robotBet = 0;
+            
+            updateChips();
+            // Start a new game
+            setTimeout(startNewGame, 1500);
+        }
+        
+        // Simple robot AI
+        function robotAction() {
+            // Simple random decision making
+            const action = Math.random();
+            
+            if (action < 0.1) {
+                // Fold
+                playerChips += potAmount;
+                potAmount = 0;
+                playerBet = 0;
+                robotBet = 0;
+                updateChips();
+                alert("Robot folds!");
+                setTimeout(startNewGame, 1500);
+            } else if (action < 0.4 && playerBet > robotBet) {
+                // Call
+                const callAmount = playerBet - robotBet;
+                robotChips -= callAmount;
+                robotBet = playerBet;
+                potAmount += callAmount;
+                updateChips();
+                advanceToNextRound();
+            } else if (action < 0.7 && playerBet <= robotBet) {
+                // Check
+                advanceToNextRound();
+            } else {
+                // Raise
+                const raiseAmount = bigBlindAmount;
+                const totalBet = playerBet + raiseAmount - robotBet;
+                
+                robotChips -= totalBet;
+                robotBet = playerBet + raiseAmount;
+                potAmount += totalBet;
+                
+                updateChips();
+                // Enable player action buttons for response
+                updateActionButtons();
+            }
+        }
+        
+        // Advance to the next betting round
+        function advanceToNextRound() {
+            // Move bets to pot and reset current bets
+            playerBet = 0;
+            robotBet = 0;
+            
+            switch (currentBettingRound) {
+                case 'preflop':
+                    currentBettingRound = 'flop';
+                    dealFlop();
+                    break;
+                case 'flop':
+                    currentBettingRound = 'turn';
+                    dealTurn();
+                    break;
+                case 'turn':
+                    currentBettingRound = 'river';
+                    dealRiver();
+                    break;
+                case 'river':
+                    currentBettingRound = 'showdown';
+                    showdown();
+                    break;
+            }
+            
+            updateChips();
+            updateActionButtons();
+        }
+        
+        // Showdown - determine winner
+        function showdown() {
+            // For now, just reveal cards and give pot to a random winner
+            revealRobotCards();
+            
+            setTimeout(() => {
+                const randomWinner = Math.random() > 0.5;
+                if (randomWinner) {
+                    alert("Falatka wins the pot!");
+                    playerChips += potAmount;
+                } else {
+                    alert("Robot wins the pot!");
+                    robotChips += potAmount;
+                }
+                potAmount = 0;
+                updateChips();
+                
+                // Start a new game
+                setTimeout(startNewGame, 1500);
+            }, 2000);
+        }
+        
+        // Update action buttons based on game state
+        function updateActionButtons() {
+            const actionButtons = document.querySelector('.action-buttons');
+            
+            if (currentBettingRound === 'none' || currentBettingRound === 'showdown') {
+                actionButtons.style.display = 'none';
+            } else {
+                actionButtons.style.display = 'flex';
+                
+                // Enable/disable buttons based on context
+                const checkButton = document.getElementById('check-button');
+                const callButton = document.getElementById('call-button');
+                
+                if (robotBet > playerBet) {
+                    // Can't check if robot has bet more
+                    checkButton.disabled = true;
+                    callButton.disabled = false;
+                } else {
+                    checkButton.disabled = false;
+                    callButton.disabled = true;
+                }
+            }
         }
 
         // Reveal the robot's cards (for learning purposes)
@@ -214,13 +564,6 @@
         // Initialize the game when the page loads
         window.onload = function() {
             startNewGame();
-            
-            // For testing: Deal community cards with these buttons
-            // In a real app, these would be connected to UI buttons
-            // dealFlop();
-            // dealTurn();
-            // dealRiver();
-            // revealRobotCards();
         };
     </script>
 </head>
@@ -232,6 +575,9 @@
                 <div class="card">?</div>
                 <div class="card">?</div>
             </div>
+            <div class="dealer-button" style="display: none;">D</div>
+            <div class="blind" style="display: none;">SB</div>
+            <div class="bet-amount" style="display: none;">0</div>
         </div>
         <div class="pot">
             <p>Pot: 0</p>
@@ -249,13 +595,21 @@
                 <div class="card">?</div>
             </div>
             <p class="player-info">Falatka: 1000</p>
+            <div class="dealer-button" style="display: none;">D</div>
+            <div class="blind" style="display: none;">SB</div>
+            <div class="bet-amount" style="display: none;">0</div>
         </div>
     </div>
+    
+    <div class="action-buttons" style="display: none; margin-top: 10px;">
+        <button id="check-button" onclick="playerCheck()">Check</button>
+        <button id="call-button" onclick="playerCall()">Call</button>
+        <button id="raise-button" onclick="playerRaise()">Raise</button>
+        <button id="fold-button" onclick="playerFold()">Fold</button>
+    </div>
+    
     <div class="controls" style="margin-top: 20px; text-align: center;">
         <button onclick="startNewGame()">New Game</button>
-        <button onclick="dealFlop()">Deal Flop</button>
-        <button onclick="dealTurn()">Deal Turn</button>
-        <button onclick="dealRiver()">Deal River</button>
         <button onclick="revealRobotCards()">Reveal Robot's Cards</button>
     </div>
 </body>
