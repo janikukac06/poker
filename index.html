@@ -471,8 +471,9 @@
             potAmount += callAmount;
             
             updateChips();
-            setActivePlayer(false); // Set robot's turn
-            robotActionWithDelay();
+            
+            // When player calls, betting round ends and we move to next stage (proper poker rules)
+            advanceToNextRound();
         }
         
         function playerRaise() {
