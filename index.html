@@ -322,7 +322,15 @@
             currentBettingRound = 'preflop';
             
             // Set active player turn
-            setActivePlayer(!isPlayerDealer); // Player after big blind acts first
+            // Player after big blind acts first
+            if (isPlayerDealer) {
+                // If player is dealer, robot acts first (as small blind)
+                setActivePlayer(false);
+                robotActionWithDelay(); // Robot makes first move
+            } else {
+                // If robot is dealer, player acts first (as small blind)
+                setActivePlayer(true);
+            }
             
             // Enable betting buttons
             updateActionButtons();
@@ -599,6 +607,13 @@
                 } else {
                     checkButton.disabled = false;
                     callButton.disabled = true;
+                }
+                
+                // If it's not player's turn, disable all buttons
+                if (!isPlayerTurn) {
+                    document.querySelectorAll('.action-buttons button').forEach(button => {
+                        button.disabled = true;
+                    });
                 }
             }
         }
