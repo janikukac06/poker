@@ -34,18 +34,18 @@
             color: white;
         }
         .robot-1 {
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+        }
+        .robot-2 {
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
         }
-        .robot-2 {
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-        }
         .robot-3 {
             top: 50%;
-            left: 20px;
+            right: 20px;
             transform: translateY(-50%);
         }
         .player {
@@ -224,7 +224,7 @@
     </style>
     <script>
         // Card definitions
-        const suits = ['♥', '♦', '♠', '♣'];
+        const suits = ['♣', '♦', '♥', '♠'];
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [];
         let communityCards = [];
@@ -744,7 +744,7 @@
             
             // Set active player (dealer acts first after the flop)
             if (currentBettingRound !== 'showdown') {
-                setActivePlayer(dealerIndex);
+                setActivePlayer((dealerIndex + 1) % players.length);
             }
             
             updateActionButtons();
