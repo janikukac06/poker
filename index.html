@@ -1101,13 +1101,14 @@
                     
                     // Apply color for hearts and diamonds
                     if (card.suit === '♥' || card.suit === '♦') {
-                        communityCardElements[i].classList.add('red-card');
+                        communityCardElements[i].style.color = 'red';
                     } else {
-                        communityCardElements[i].classList.remove('red-card');
+                        communityCardElements[i].style.color = 'black';
                     }
                 } else {
+                    // Clear card content when no card exists
                     communityCardElements[i].textContent = '';
-                    communityCardElements[i].classList.remove('red-card');
+                    communityCardElements[i].style.color = 'black';
                 }
             }
         }
