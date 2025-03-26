@@ -232,9 +232,10 @@
         let communityCards = [];
         
         // Game state
-        let dealerPosition = 0; // 0 = player, 1-3 = robots
-        let smallBlindPosition = 1; // Position left of dealer
-        let bigBlindPosition = 2; // Position left of small blind
+        let dealerPosition = 0; // 0 = player, 1 = robot1 (left), 2 = robot2 (top), 3 = robot3 (right)
+        let smallBlindPosition = 0; // Position left of dealer
+        let bigBlindPosition = 0; // Position left of small blind
+        let firstToActPosition = 0; // Position left of big blind (first to act preflop)
         let smallBlindAmount = 10;
         let bigBlindAmount = 20;
         let playerChips = 1000;
@@ -371,11 +372,12 @@
             robotBet = 0;
             
             // Randomly select dealer position
-            dealerPosition = Math.floor(Math.random() * 4); // 0 = player, 1-3 = robots
+            dealerPosition = Math.floor(Math.random() * 4); // 0 = player, 1 = robot1, 2 = robot2, 3 = robot3
             
-            // Set small blind and big blind positions (left of dealer)
+            // Set small blind, big blind, and first to act positions (clockwise order)
             smallBlindPosition = (dealerPosition + 1) % 4;
             bigBlindPosition = (dealerPosition + 2) % 4;
+            firstToActPosition = (dealerPosition + 3) % 4;
             
             // Initialize the deck and deal cards
             initializeDeck();
@@ -392,15 +394,13 @@
             // Start preflop betting round
             currentBettingRound = 'preflop';
             
-            // Set active player turn
-            // Player after big blind acts first
-            if (dealerPosition === 0) {
-                // If player is dealer, robot acts first
-                setActivePlayer(false);
-                robotActionWithDelay(); // Robot makes first move
-            } else {
-                // If robot is dealer, player acts first
-                setActivePlayer(true);
+            // Set active player turn based on game stage
+            // First to act is the player after the big blind in preflop
+            setActivePlayer(firstToActPosition === 0); 
+            
+            // If a robot is first to act, trigger their action
+            if (firstToActPosition !== 0) {
+                robotActionWithDelay();
             }
             
             // Enable betting buttons
@@ -409,6 +409,11 @@
         
         // Place blinds based on dealer position
         function placeBlinds() {
+            // Reset bets first
+            playerBet = 0;
+            robotBet = 0;
+            
+            // Set small blind
             if (smallBlindPosition === 0) {
                 // Player is small blind
                 playerBet = smallBlindAmount;
@@ -419,6 +424,7 @@
                 robotChips -= smallBlindAmount;
             }
             
+            // Set big blind
             if (bigBlindPosition === 0) {
                 // Player is big blind
                 playerBet = bigBlindAmount;
@@ -462,6 +468,7 @@
         
         // Update dealer button position
         function updateDealerButton() {
+            // Get all dealer buttons
             let playerDealerButton = document.querySelector('.player .dealer-button');
             let robotDealerButtons = [
                 document.querySelector('.robot-1 .dealer-button'),
@@ -485,6 +492,7 @@
         
         // Update blinds indicators
         function updateBlinds() {
+            // Get all blind indicators
             let playerBlind = document.querySelector('.player .blind');
             let robotBlinds = [
                 document.querySelector('.robot-1 .blind'),
@@ -531,22 +539,51 @@
         function setActivePlayer(playerActive) {
             isPlayerTurn = playerActive;
             const playerElement = document.querySelector('.player');
-            const robotElement = document.querySelector('.robot');
-            const robotThinking = document.querySelector('.robot .thinking');
+            const robotElements = [
+                document.querySelector('.robot-1'),
+                document.querySelector('.robot-2'),
+                document.querySelector('.robot-3')
+            ];
+            
+            // Reset all active player indicators
+            playerElement.classList.remove('active-player');
+            robotElements.forEach(robot => {
+                robot.classList.remove('active-player');
+            });
+            
+            // Hide all thinking indicators
+            robotElements.forEach(robot => {
+                robot.querySelector('.thinking').style.display = 'none';
+            });
             
             if (playerActive) {
+                // Player's turn
                 playerElement.classList.add('active-player');
-                robotElement.classList.remove('active-player');
-                robotThinking.style.display = 'none';
                 
                 // Enable player action buttons
                 document.querySelectorAll('.action-buttons button').forEach(button => {
                     button.disabled = false;
                 });
             } else {
-                playerElement.classList.remove('active-player');
-                robotElement.classList.add('active-player');
-                robotThinking.style.display = 'block';
+                // Robot's turn - find which robot is active
+                let activeRobotPosition = 0;
+                
+                if (currentBettingRound === 'preflop') {
+                    // In preflop, we follow firstToActPosition if it's a robot's turn
+                    if (firstToActPosition !== 0) {
+                        activeRobotPosition = firstToActPosition;
+                    } else {
+                        // If player was first but has acted, next is clockwise
+                        activeRobotPosition = 1; // Default to robot1
+                    }
+                } else {
+                    // In other rounds, we start from the player after dealer
+                    activeRobotPosition = dealerPosition !== 3 ? dealerPosition + 1 : 1;
+                }
+                
+                // Activate the correct robot
+                robotElements[activeRobotPosition - 1].classList.add('active-player');
+                robotElements[activeRobotPosition - 1].querySelector('.thinking').style.display = 'block';
                 
                 // Disable player action buttons while robot is thinking
                 document.querySelectorAll('.action-buttons button').forEach(button => {
