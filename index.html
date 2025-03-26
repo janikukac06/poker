@@ -239,6 +239,7 @@
                 bet: 0,
                 position: 0, // Bottom position
                 folded: false,
+                isActedInCurrentRound: false,
                 element: '.player',
                 dealerButton: '.player .dealer-button',
                 blindIndicator: '.player .blind',
@@ -252,6 +253,7 @@
                 bet: 0,
                 position: 1, // Left position
                 folded: false,
+                isActedInCurrentRound: false,
                 element: '.robot-1',
                 dealerButton: '.robot-1 .dealer-button',
                 blindIndicator: '.robot-1 .blind',
@@ -266,6 +268,7 @@
                 bet: 0,
                 position: 2, // Top position
                 folded: false,
+                isActedInCurrentRound: false,
                 element: '.robot-2',
                 dealerButton: '.robot-2 .dealer-button',
                 blindIndicator: '.robot-2 .blind',
@@ -280,6 +283,7 @@
                 bet: 0,
                 position: 3, // Right position
                 folded: false,
+                isActedInCurrentRound: false,
                 element: '.robot-3',
                 dealerButton: '.robot-3 .dealer-button',
                 blindIndicator: '.robot-3 .blind',
@@ -392,6 +396,7 @@
             // Reset all bets
             players.forEach(player => {
                 player.bet = 0;
+                player.isActedInCurrentRound = false;
             });
             
             // Small blind
@@ -545,6 +550,10 @@
         // Move to the next player in turn
         function nextPlayer() {
             console.log("nextPlayer");
+            // Mark current player as having acted in this round
+            players[activePlayerIndex].isActedInCurrentRound = true;
+            console.log(`Player ${players[activePlayerIndex].name} has acted this round`);
+                        
             // Find next player that hasn't folded
             let nextIndex = (activePlayerIndex + 1) % players.length;
             let count = 0;
@@ -561,13 +570,14 @@
             
             // If all active players have the same bet amount, move to next round
             const allBetsEqual = nonFoldedPlayers.every(p => p.bet === highestBet);
+
+            // Check if all non-folded players have acted in this round
+            const allPlayersActed = nonFoldedPlayers.every(p => p.isActedInCurrentRound);
             
-            // Also check if we've completed a full round of betting
-            // (this ensures everyone has had a chance to act since the last bet increase)
-            const startingBettingIndex = (bigBlindIndex + 1) % players.length; // First to act preflop
-            const completedBettingRound = nextIndex === startingBettingIndex;
+            console.log("All bets equal:", allBetsEqual, "All players acted:", allPlayersActed);
+            console.log("Active players:", nonFoldedPlayers.map(p => `${p.name}: bet=${p.bet}, acted=${p.isActedInCurrentRound}`));
             
-            if (allBetsEqual && completedBettingRound) {
+            if (allBetsEqual && allPlayersActed) {
                 // All players have matched the bet, move to next round
                 console.log("All bets equal, advancing to next round");
                 advanceToNextRound();
@@ -737,6 +747,7 @@
                 if (random < 0.7) {
                     // Check (70% chance)
                     console.log(`${robot.name} checks`);
+                    // Robot action flag is set in nextPlayer()
                     nextPlayer();
                 } else {
                     // Raise (30% chance)
@@ -744,37 +755,35 @@
                     const raiseAmount = bigBlindAmount;
                     robot.chips -= raiseAmount;
                     robot.bet += raiseAmount;
+                    
+                    // When robot raises, all other players need to act again
+                    players.forEach(player => {
+                        if (player !== robot && !player.folded) {
+                            player.isActedInCurrentRound = false;
+                        }
+                    });
+                    
                     potAmount = calculatePotAmount();
                     updateChips();
                     console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
                 }
             } else {
-                // Must call, raise, or fold
-                if (random < 0.4) {
-                    // Call (40% chance)
-                    console.log(`${robot.name} calls`);
-                    robot.chips -= callAmount;
-                    robot.bet = highestBet;
+                // Need to call or raise
+                if (callAmount >= robot.chips) {
+                    // All-in
+                    console.log(`${robot.name} is all-in`);
+                    robot.bet += robot.chips;
+                    robot.chips = 0;
                     potAmount = calculatePotAmount();
                     updateChips();
-                    console.log("Robot state after calling:", JSON.parse(JSON.stringify(robot)));
+                    console.log("Robot state after going all-in:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
-                } else if (random < 0.7) {
-                    // Raise (30% chance)
-                    console.log(`${robot.name} raises`);
-                    const raiseAmount = bigBlindAmount;
-                    robot.chips -= (callAmount + raiseAmount);
-                    robot.bet = highestBet + raiseAmount;
-                    potAmount = calculatePotAmount();
-                    updateChips();
-                    console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
-                    nextPlayer();
-                } else {
-                    // Fold (30% chance)
+                } else if (random < 0.5) {
+                    // Fold (50% chance if need to call)
                     console.log(`${robot.name} folds`);
                     robot.folded = true;
-                    console.log("Robot state after folding:", JSON.parse(JSON.stringify(robot)));
+                    updatePlayerCards();
                     
                     // Check if only one player remains
                     const activePlayers = players.filter(p => !p.folded);
@@ -784,15 +793,50 @@
                         potAmount = 0;
                         
                         updateChips();
-                        showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                        showGameMessage(`${activePlayers[0].name} wins the pot!`);
                         console.log("Game over, winner:", activePlayers[0].name);
                         
                         // Hide action buttons
                         document.querySelector('.action-buttons').style.display = 'none';
                         
+                        setTimeout(startNewGame, 3000);
                         return;
                     }
                     
+                    nextPlayer();
+                } else if (random < 0.9) {
+                    // Call (40% chance if need to call)
+                    console.log(`${robot.name} calls ${callAmount}`);
+                    robot.chips -= callAmount;
+                    robot.bet = highestBet;
+                    potAmount = calculatePotAmount();
+                    updateChips();
+                    console.log("Robot state after calling:", JSON.parse(JSON.stringify(robot)));
+                    nextPlayer();
+                } else {
+                    // Raise (10% chance if need to call)
+                    console.log(`${robot.name} raises`);
+                    const raiseAmount = callAmount + bigBlindAmount;
+                    
+                    if (raiseAmount >= robot.chips) {
+                        // All-in
+                        robot.bet += robot.chips;
+                        robot.chips = 0;
+                    } else {
+                        robot.chips -= raiseAmount;
+                        robot.bet = highestBet + bigBlindAmount;
+                    }
+                    
+                    // When robot raises, all other players need to act again
+                    players.forEach(player => {
+                        if (player !== robot && !player.folded) {
+                            player.isActedInCurrentRound = false;
+                        }
+                    });
+                    
+                    potAmount = calculatePotAmount();
+                    updateChips();
+                    console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
                 }
             }
