@@ -224,7 +224,7 @@
     </style>
     <script>
         // Card definitions
-        const suits = ['♣', '♦', '♥', '♠'];
+        const suits = ['♥', '♦', '♠', '♣'];
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [];
         let communityCards = [];
@@ -335,6 +335,7 @@
             
             // Update the UI
             updatePlayerCards();
+            console.log("Players after dealing cards:", JSON.parse(JSON.stringify(players)));
         }
         
         // Start a new game
@@ -405,6 +406,7 @@
             potAmount = calculatePotAmount();
             
             updateChips();
+            console.log("Players after placing blinds:", JSON.parse(JSON.stringify(players)));
         }
         
         // Calculate total pot amount from all player bets
@@ -529,11 +531,13 @@
             
             if (allBetsEqual && completedBettingRound) {
                 // All players have matched the bet, move to next round
+                console.log("All bets equal, advancing to next round");
                 advanceToNextRound();
                 return;
             }
             
             setActivePlayer(nextIndex);
+            console.log("Next player:", nextIndex, "Active player is robot:", players[nextIndex].isRobot);
             
             // If next player is a robot, trigger its action
             if (players[nextIndex].isRobot) {
@@ -596,6 +600,7 @@
             const highestBet = Math.max(...players.map(p => p.bet));
             
             if (players[activePlayerIndex].bet >= highestBet) {
+                console.log("Player checks");
                 nextPlayer(); // Move to next player's turn
             }
         }
@@ -613,6 +618,7 @@
             potAmount = calculatePotAmount();
             
             updateChips();
+            console.log("Player calls, new bet:", players[humanPlayerIndex].bet);
             nextPlayer();
         }
         
@@ -631,6 +637,7 @@
             potAmount = calculatePotAmount();
             
             updateChips();
+            console.log("Player raises to:", players[humanPlayerIndex].bet);
             
             nextPlayer(); // Move to next player
         }
@@ -638,6 +645,7 @@
         function playerFold() {
             const humanPlayerIndex = players.findIndex(p => !p.isRobot);
             players[humanPlayerIndex].folded = true;
+            console.log("Player folds");
             
             // Check if only one player remains
             const activePlayers = players.filter(p => !p.folded);
@@ -648,6 +656,7 @@
                 
                 updateChips();
                 showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                console.log("Game over, winner:", activePlayers[0].name);
                 
                 // Disabled buttons until next game
                 document.querySelectorAll('.action-buttons button').forEach(button => {
@@ -697,6 +706,7 @@
                     robot.bet += raiseAmount;
                     potAmount = calculatePotAmount();
                     updateChips();
+                    console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
                 }
             } else {
@@ -708,6 +718,7 @@
                     robot.bet = highestBet;
                     potAmount = calculatePotAmount();
                     updateChips();
+                    console.log("Robot state after calling:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
                 } else if (random < 0.7) {
                     // Raise (30% chance)
@@ -717,11 +728,13 @@
                     robot.bet = highestBet + raiseAmount;
                     potAmount = calculatePotAmount();
                     updateChips();
+                    console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
                 } else {
                     // Fold (30% chance)
                     console.log(`${robot.name} folds`);
                     robot.folded = true;
+                    console.log("Robot state after folding:", JSON.parse(JSON.stringify(robot)));
                     
                     // Check if only one player remains
                     const activePlayers = players.filter(p => !p.folded);
@@ -732,6 +745,7 @@
                         
                         updateChips();
                         showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                        console.log("Game over, winner:", activePlayers[0].name);
                         
                         // Hide action buttons
                         document.querySelector('.action-buttons').style.display = 'none';
@@ -753,21 +767,27 @@
             
             switch (currentBettingRound) {
                 case 'preflop':
-                    currentBettingRound = 'flop';
+                    // Deal the flop
                     dealFlop();
+                    currentBettingRound = 'flop';
                     break;
                 case 'flop':
-                    currentBettingRound = 'turn';
+                    // Deal the turn
                     dealTurn();
+                    currentBettingRound = 'turn';
                     break;
                 case 'turn':
-                    currentBettingRound = 'river';
+                    // Deal the river
                     dealRiver();
+                    currentBettingRound = 'river';
                     break;
                 case 'river':
+                    // Show down - evaluate hands and determine winner
                     currentBettingRound = 'showdown';
                     showdown();
-                    break;
+                    // Start a new hand after a brief delay
+                    setTimeout(startNewGame, 3000);
+                    return;
             }
             
             updateChips();
@@ -778,6 +798,8 @@
             }
             
             updateActionButtons();
+            console.log("Advanced to betting round:", currentBettingRound);
+            console.log("Players state:", JSON.parse(JSON.stringify(players)));
         }
         
         // Update action buttons based on game state
