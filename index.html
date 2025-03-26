@@ -227,24 +227,77 @@
         const suits = ['♥', '♦', '♠', '♣'];
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [];
-        let playerHand = [];
-        let robotHands = [[], [], []];
         let communityCards = [];
         
+        // Players array - contains all players (human and robots)
+        let players = [
+            {
+                name: "Falatka",
+                isRobot: false,
+                chips: 1000,
+                cards: [],
+                bet: 0,
+                position: 0, // Bottom position
+                folded: false,
+                element: '.player',
+                dealerButton: '.player .dealer-button',
+                blindIndicator: '.player .blind',
+                betIndicator: '.player .bet-amount'
+            },
+            {
+                name: "Robot1",
+                isRobot: true,
+                chips: 1000,
+                cards: [],
+                bet: 0,
+                position: 1, // Left position
+                folded: false,
+                element: '.robot-1',
+                dealerButton: '.robot-1 .dealer-button',
+                blindIndicator: '.robot-1 .blind',
+                betIndicator: '.robot-1 .bet-amount',
+                thinking: '.robot-1 .thinking'
+            },
+            {
+                name: "Robot2",
+                isRobot: true,
+                chips: 1000,
+                cards: [],
+                bet: 0,
+                position: 2, // Top position
+                folded: false,
+                element: '.robot-2',
+                dealerButton: '.robot-2 .dealer-button',
+                blindIndicator: '.robot-2 .blind',
+                betIndicator: '.robot-2 .bet-amount',
+                thinking: '.robot-2 .thinking'
+            },
+            {
+                name: "Robot3",
+                isRobot: true,
+                chips: 1000,
+                cards: [],
+                bet: 0,
+                position: 3, // Right position
+                folded: false,
+                element: '.robot-3',
+                dealerButton: '.robot-3 .dealer-button',
+                blindIndicator: '.robot-3 .blind',
+                betIndicator: '.robot-3 .bet-amount',
+                thinking: '.robot-3 .thinking'
+            }
+        ];
+        
         // Game state
-        let dealerPosition = 0; // 0 = player, 1 = robot1 (left), 2 = robot2 (top), 3 = robot3 (right)
-        let smallBlindPosition = 0; // Position left of dealer
-        let bigBlindPosition = 0; // Position left of small blind
-        let firstToActPosition = 0; // Position left of big blind (first to act preflop)
+        let dealerIndex = 0;      // Index of the dealer in the players array
+        let smallBlindIndex = 0;  // Index of the small blind in the players array
+        let bigBlindIndex = 0;    // Index of the big blind in the players array
+        let activePlayerIndex = 0;// Index of the active player in the players array
         let smallBlindAmount = 10;
         let bigBlindAmount = 20;
-        let playerChips = 1000;
-        let robotChips = 1000;
         let potAmount = 0;
-        let playerBet = 0;
-        let robotBet = 0;
         let currentBettingRound = 'none'; // none, preflop, flop, turn, river, showdown
-        let isPlayerTurn = false; // Track whose turn it is
+        let isPlayerTurn = false; // Track if it's the human player's turn
         
         // Create and shuffle the deck
         function initializeDeck() {
@@ -265,119 +318,46 @@
         // Deal cards to players
         function dealCards() {
             // Reset hands and community cards
-            playerHand = [];
-            for (let i = 0; i < 3; i++) {
-                robotHands[i] = [];
-            }
             communityCards = [];
             
+            // Reset player cards
+            players.forEach(player => {
+                player.cards = [];
+                player.folded = false;
+            });
+            
             // Deal 2 cards to each player
-            playerHand.push(deck.pop());
-            playerHand.push(deck.pop());
-            for (let i = 0; i < 3; i++) {
-                robotHands[i].push(deck.pop());
-                robotHands[i].push(deck.pop());
+            for (let i = 0; i < 2; i++) {
+                for (let player of players) {
+                    player.cards.push(deck.pop());
+                }
             }
             
             // Update the UI
             updatePlayerCards();
-            updateRobotCards();
-            updateCommunityCards();
         }
-
-        // Deal the flop (first 3 community cards)
-        function dealFlop() {
-            // Burn a card (discard)
-            deck.pop();
-            
-            // Deal 3 community cards
-            for (let i = 0; i < 3; i++) {
-                communityCards.push(deck.pop());
-            }
-            
-            updateCommunityCards();
-        }
-
-        // Deal the turn (4th community card)
-        function dealTurn() {
-            // Burn a card
-            deck.pop();
-            
-            // Deal the turn card
-            communityCards.push(deck.pop());
-            
-            updateCommunityCards();
-        }
-
-        // Deal the river (5th community card)
-        function dealRiver() {
-            // Burn a card
-            deck.pop();
-            
-            // Deal the river card
-            communityCards.push(deck.pop());
-            
-            updateCommunityCards();
-        }
-
-        // Update player cards in the UI
-        function updatePlayerCards() {
-            const playerCardElements = document.querySelectorAll('.player .card');
-            
-            // Show player's cards
-            for (let i = 0; i < playerHand.length; i++) {
-                const card = playerHand[i];
-                const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
-                playerCardElements[i].innerHTML = `${card.value}${card.suit}`;
-                playerCardElements[i].style.color = color;
-            }
-        }
-
-        // Update robot cards in the UI
-        function updateRobotCards() {
-            const robotCardElements = document.querySelectorAll('.robot .card');
-            
-            // Keep the robot's cards hidden with a card back design
-            for (let i = 0; i < robotCardElements.length; i++) {
-                robotCardElements[i].innerHTML = '?'; // Still need this for structure but it won't be visible
-                robotCardElements[i].classList.add('card-back');
-            }
-        }
-
-        // Update community cards in the UI
-        function updateCommunityCards() {
-            const communityCardElements = document.querySelectorAll('.pot .card');
-            
-            // Show revealed community cards, keep others hidden
-            for (let i = 0; i < communityCardElements.length; i++) {
-                if (i < communityCards.length) {
-                    const card = communityCards[i];
-                    const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
-                    communityCardElements[i].innerHTML = `${card.value}${card.suit}`;
-                    communityCardElements[i].style.color = color;
-                } else {
-                    communityCardElements[i].innerHTML = '?';
-                    communityCardElements[i].style.color = 'black';
-                }
-            }
-        }
-
+        
         // Start a new game
         function startNewGame() {
             // Reset game state
-            playerChips = 1000;
-            robotChips = 1000;
             potAmount = 0;
-            playerBet = 0;
-            robotBet = 0;
+            
+            // Reset all player chips and bets
+            players.forEach(player => {
+                player.chips = 1000;
+                player.bet = 0;
+                player.folded = false;
+            });
             
             // Randomly select dealer position
-            dealerPosition = Math.floor(Math.random() * 4); // 0 = player, 1 = robot1, 2 = robot2, 3 = robot3
+            dealerIndex = Math.floor(Math.random() * players.length);
             
-            // Set small blind, big blind, and first to act positions (clockwise order)
-            smallBlindPosition = (dealerPosition + 1) % 4;
-            bigBlindPosition = (dealerPosition + 2) % 4;
-            firstToActPosition = (dealerPosition + 3) % 4;
+            // Set small blind and big blind positions (clockwise)
+            smallBlindIndex = (dealerIndex + 1) % players.length;
+            bigBlindIndex = (dealerIndex + 2) % players.length;
+            
+            // Set the first player to act (after big blind)
+            activePlayerIndex = (bigBlindIndex + 1) % players.length;
             
             // Initialize the deck and deal cards
             initializeDeck();
@@ -394,308 +374,352 @@
             // Start preflop betting round
             currentBettingRound = 'preflop';
             
-            // Set active player turn based on game stage
-            // First to act is the player after the big blind in preflop
-            setActivePlayer(firstToActPosition === 0); 
+            // Set active player
+            setActivePlayer(activePlayerIndex);
             
-            // If a robot is first to act, trigger their action
-            if (firstToActPosition !== 0) {
+            // If robot is first to act, trigger its action
+            if (players[activePlayerIndex].isRobot) {
                 robotActionWithDelay();
             }
             
-            // Enable betting buttons
+            // Enable betting buttons if it's player's turn
             updateActionButtons();
         }
         
         // Place blinds based on dealer position
         function placeBlinds() {
-            // Reset bets first
-            playerBet = 0;
-            robotBet = 0;
+            // Reset all bets
+            players.forEach(player => {
+                player.bet = 0;
+            });
             
-            // Set small blind
-            if (smallBlindPosition === 0) {
-                // Player is small blind
-                playerBet = smallBlindAmount;
-                playerChips -= smallBlindAmount;
-            } else {
-                // Robot is small blind
-                robotBet = smallBlindAmount;
-                robotChips -= smallBlindAmount;
-            }
+            // Small blind
+            players[smallBlindIndex].chips -= smallBlindAmount;
+            players[smallBlindIndex].bet = smallBlindAmount;
             
-            // Set big blind
-            if (bigBlindPosition === 0) {
-                // Player is big blind
-                playerBet = bigBlindAmount;
-                playerChips -= bigBlindAmount;
-            } else {
-                // Robot is big blind
-                robotBet = bigBlindAmount;
-                robotChips -= bigBlindAmount;
-            }
+            // Big blind
+            players[bigBlindIndex].chips -= bigBlindAmount;
+            players[bigBlindIndex].bet = bigBlindAmount;
             
-            // Add blinds to the pot
-            potAmount = playerBet + robotBet;
+            // Calculate pot amount
+            potAmount = calculatePotAmount();
             
             updateChips();
         }
         
+        // Calculate total pot amount from all player bets
+        function calculatePotAmount() {
+            return players.reduce((total, player) => total + player.bet, 0);
+        }
+        
         // Update the chips display
         function updateChips() {
-            document.querySelector('.robot p').textContent = `Robot: ${robotChips}`;
-            document.querySelector('.player-info').textContent = `Falatka: ${playerChips}`;
+            // Update player chips display
+            players.forEach(player => {
+                if (!player.isRobot) {
+                    document.querySelector('.player-info').textContent = `${player.name}: ${player.chips}`;
+                } else {
+                    document.querySelector(`${player.element} p`).textContent = `${player.name}: ${player.chips}`;
+                }
+                
+                // Update bet amounts
+                let betElement = document.querySelector(player.betIndicator);
+                if (player.bet > 0) {
+                    betElement.textContent = player.bet;
+                    betElement.style.display = 'block';
+                } else {
+                    betElement.style.display = 'none';
+                }
+            });
+            
+            // Update pot amount
             document.querySelector('.pot p').textContent = `Pot: ${potAmount}`;
-            
-            // Update bet amounts
-            let playerBetElement = document.querySelector('.player .bet-amount');
-            let robotBetElement = document.querySelector('.robot .bet-amount');
-            
-            if (playerBet > 0) {
-                playerBetElement.textContent = playerBet;
-                playerBetElement.style.display = 'block';
-            } else {
-                playerBetElement.style.display = 'none';
-            }
-            
-            if (robotBet > 0) {
-                robotBetElement.textContent = robotBet;
-                robotBetElement.style.display = 'block';
-            } else {
-                robotBetElement.style.display = 'none';
-            }
         }
         
         // Update dealer button position
         function updateDealerButton() {
-            // Get all dealer buttons
-            let playerDealerButton = document.querySelector('.player .dealer-button');
-            let robotDealerButtons = [
-                document.querySelector('.robot-1 .dealer-button'),
-                document.querySelector('.robot-2 .dealer-button'),
-                document.querySelector('.robot-3 .dealer-button')
-            ];
-            
-            // Hide all dealer buttons first
-            playerDealerButton.style.display = 'none';
-            robotDealerButtons.forEach(button => {
-                button.style.display = 'none';
+            // Hide all dealer buttons
+            players.forEach(player => {
+                document.querySelector(player.dealerButton).style.display = 'none';
             });
             
-            // Show the dealer button for the current dealer
-            if (dealerPosition === 0) {
-                playerDealerButton.style.display = 'flex';
-            } else {
-                robotDealerButtons[dealerPosition - 1].style.display = 'flex';
-            }
+            // Show dealer button for the dealer
+            document.querySelector(players[dealerIndex].dealerButton).style.display = 'flex';
         }
         
         // Update blinds indicators
         function updateBlinds() {
-            // Get all blind indicators
-            let playerBlind = document.querySelector('.player .blind');
-            let robotBlinds = [
-                document.querySelector('.robot-1 .blind'),
-                document.querySelector('.robot-2 .blind'),
-                document.querySelector('.robot-3 .blind')
-            ];
-            
             // Hide all blind indicators first
-            playerBlind.style.display = 'none';
-            robotBlinds.forEach(blind => {
-                blind.style.display = 'none';
+            players.forEach(player => {
+                document.querySelector(player.blindIndicator).style.display = 'none';
             });
             
-            // Set small blind indicator
-            if (smallBlindPosition === 0) {
-                playerBlind.textContent = 'SB';
-                playerBlind.classList.add('small-blind');
-                playerBlind.classList.remove('big-blind');
-                playerBlind.style.display = 'flex';
-            } else {
-                let sbBlind = robotBlinds[smallBlindPosition - 1];
-                sbBlind.textContent = 'SB';
-                sbBlind.classList.add('small-blind');
-                sbBlind.classList.remove('big-blind');
-                sbBlind.style.display = 'flex';
-            }
+            // Show small blind indicator
+            let sbIndicator = document.querySelector(players[smallBlindIndex].blindIndicator);
+            sbIndicator.textContent = 'SB';
+            sbIndicator.classList.add('small-blind');
+            sbIndicator.classList.remove('big-blind');
+            sbIndicator.style.display = 'flex';
             
-            // Set big blind indicator
-            if (bigBlindPosition === 0) {
-                playerBlind.textContent = 'BB';
-                playerBlind.classList.remove('small-blind');
-                playerBlind.classList.add('big-blind');
-                playerBlind.style.display = 'flex';
-            } else {
-                let bbBlind = robotBlinds[bigBlindPosition - 1];
-                bbBlind.textContent = 'BB';
-                bbBlind.classList.remove('small-blind');
-                bbBlind.classList.add('big-blind');
-                bbBlind.style.display = 'flex';
-            }
+            // Show big blind indicator
+            let bbIndicator = document.querySelector(players[bigBlindIndex].blindIndicator);
+            bbIndicator.textContent = 'BB';
+            bbIndicator.classList.remove('small-blind');
+            bbIndicator.classList.add('big-blind');
+            bbIndicator.style.display = 'flex';
         }
         
         // Set active player (visual indicator)
-        function setActivePlayer(playerActive) {
-            isPlayerTurn = playerActive;
-            const playerElement = document.querySelector('.player');
-            const robotElements = [
-                document.querySelector('.robot-1'),
-                document.querySelector('.robot-2'),
-                document.querySelector('.robot-3')
-            ];
+        function setActivePlayer(index) {
+            activePlayerIndex = index;
+            isPlayerTurn = !players[activePlayerIndex].isRobot;
             
-            // Reset all active player indicators
-            playerElement.classList.remove('active-player');
-            robotElements.forEach(robot => {
-                robot.classList.remove('active-player');
+            // Remove active-player class from all players
+            players.forEach(player => {
+                document.querySelector(player.element).classList.remove('active-player');
             });
             
             // Hide all thinking indicators
-            robotElements.forEach(robot => {
-                robot.querySelector('.thinking').style.display = 'none';
+            players.filter(p => p.isRobot).forEach(robot => {
+                document.querySelector(robot.thinking).style.display = 'none';
             });
             
-            if (playerActive) {
-                // Player's turn
-                playerElement.classList.add('active-player');
-                
-                // Enable player action buttons
-                document.querySelectorAll('.action-buttons button').forEach(button => {
-                    button.disabled = false;
-                });
-            } else {
-                // Robot's turn - find which robot is active
-                let activeRobotPosition = 0;
-                
-                if (currentBettingRound === 'preflop') {
-                    // In preflop, we follow firstToActPosition if it's a robot's turn
-                    if (firstToActPosition !== 0) {
-                        activeRobotPosition = firstToActPosition;
-                    } else {
-                        // If player was first but has acted, next is clockwise
-                        activeRobotPosition = 1; // Default to robot1
-                    }
-                } else {
-                    // In other rounds, we start from the player after dealer
-                    activeRobotPosition = dealerPosition !== 3 ? dealerPosition + 1 : 1;
-                }
-                
-                // Activate the correct robot
-                robotElements[activeRobotPosition - 1].classList.add('active-player');
-                robotElements[activeRobotPosition - 1].querySelector('.thinking').style.display = 'block';
+            // Add active-player class to the active player
+            document.querySelector(players[activePlayerIndex].element).classList.add('active-player');
+            
+            // If active player is a robot, show thinking indicator
+            if (players[activePlayerIndex].isRobot) {
+                document.querySelector(players[activePlayerIndex].thinking).style.display = 'block';
                 
                 // Disable player action buttons while robot is thinking
                 document.querySelectorAll('.action-buttons button').forEach(button => {
                     button.disabled = true;
                 });
+            } else {
+                // Enable player action buttons
+                document.querySelectorAll('.action-buttons button').forEach(button => {
+                    button.disabled = false;
+                });
             }
         }
         
-        // Player actions
-        function playerCheck() {
-            // Player can only check if robot hasn't bet more
-            if (robotBet <= playerBet) {
-                setActivePlayer(false); // Set robot's turn
+        // Move to the next player in turn
+        function nextPlayer() {
+            // Find next player that hasn't folded
+            let nextIndex = (activePlayerIndex + 1) % players.length;
+            let count = 0;
+            
+            // Skip folded players, but prevent infinite loops
+            while (players[nextIndex].folded && count < players.length) {
+                nextIndex = (nextIndex + 1) % players.length;
+                count++;
+            }
+            
+            setActivePlayer(nextIndex);
+            
+            // If next player is a robot, trigger its action
+            if (players[nextIndex].isRobot) {
                 robotActionWithDelay();
             }
         }
         
+        // Update player cards in the UI
+        function updatePlayerCards() {
+            // Update human player's cards
+            const humanPlayer = players.find(p => !p.isRobot);
+            const playerCardElements = document.querySelectorAll('.player .card');
+            
+            if (humanPlayer.cards.length === 2) {
+                playerCardElements[0].textContent = `${humanPlayer.cards[0].value}${humanPlayer.cards[0].suit}`;
+                playerCardElements[1].textContent = `${humanPlayer.cards[1].value}${humanPlayer.cards[1].suit}`;
+                
+                // Apply color for hearts and diamonds
+                playerCardElements.forEach((cardEl, index) => {
+                    if (humanPlayer.cards[index].suit === '♥' || humanPlayer.cards[index].suit === '♦') {
+                        cardEl.classList.add('red-card');
+                    } else {
+                        cardEl.classList.remove('red-card');
+                    }
+                });
+            } else {
+                playerCardElements.forEach(card => {
+                    card.textContent = '?';
+                    card.classList.remove('red-card');
+                });
+            }
+            
+            // Set robot cards to hidden state (unless revealed)
+            players.filter(p => p.isRobot).forEach((robot, robotIndex) => {
+                const robotCards = document.querySelectorAll(`${robot.element} .card`);
+                robotCards.forEach(card => {
+                    card.textContent = '?';
+                    card.classList.remove('red-card');
+                });
+            });
+        }
+        
+        // Player actions
+        function playerCheck() {
+            // Player can only check if no one has bet more
+            const highestBet = Math.max(...players.map(p => p.bet));
+            
+            if (players[activePlayerIndex].bet >= highestBet) {
+                nextPlayer(); // Move to next player's turn
+            }
+        }
+        
         function playerCall() {
-            // Match the robot's bet
-            const callAmount = robotBet - playerBet;
-            playerChips -= callAmount;
-            playerBet = robotBet;
-            potAmount += callAmount;
+            const humanPlayerIndex = players.findIndex(p => !p.isRobot);
+            const highestBet = Math.max(...players.map(p => p.bet));
+            const callAmount = highestBet - players[humanPlayerIndex].bet;
+            
+            // Update chips and bet
+            players[humanPlayerIndex].chips -= callAmount;
+            players[humanPlayerIndex].bet = highestBet;
+            
+            // Update pot
+            potAmount = calculatePotAmount();
             
             updateChips();
             
-            // When player calls, betting round ends and we move to next stage (proper poker rules)
+            // Move to next betting round
             advanceToNextRound();
         }
         
         function playerRaise() {
-            // Raise by big blind amount
+            const humanPlayerIndex = players.findIndex(p => !p.isRobot);
+            const highestBet = Math.max(...players.map(p => p.bet));
             const raiseAmount = bigBlindAmount;
-            const totalBet = robotBet + raiseAmount - playerBet;
+            const totalBet = highestBet + raiseAmount;
+            const amountToAdd = totalBet - players[humanPlayerIndex].bet;
             
-            playerChips -= totalBet;
-            playerBet = robotBet + raiseAmount;
-            potAmount += totalBet;
+            // Update chips and bet
+            players[humanPlayerIndex].chips -= amountToAdd;
+            players[humanPlayerIndex].bet = totalBet;
+            
+            // Update pot
+            potAmount = calculatePotAmount();
             
             updateChips();
-            setActivePlayer(false); // Set robot's turn
-            robotActionWithDelay();
+            
+            nextPlayer(); // Move to next player
         }
         
         function playerFold() {
-            // Robot wins the pot
-            robotChips += potAmount;
-            potAmount = 0;
-            playerBet = 0;
-            robotBet = 0;
+            const humanPlayerIndex = players.findIndex(p => !p.isRobot);
+            players[humanPlayerIndex].folded = true;
             
-            updateChips();
-            // Start a new game after a delay
-            setTimeout(startNewGame, 1500);
+            // Check if only one player remains
+            const activePlayers = players.filter(p => !p.folded);
+            if (activePlayers.length === 1) {
+                // Award pot to the remaining player
+                activePlayers[0].chips += potAmount;
+                potAmount = 0;
+                
+                updateChips();
+                showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                
+                // Disabled buttons until next game
+                document.querySelectorAll('.action-buttons button').forEach(button => {
+                    button.disabled = true;
+                });
+                
+                // Hide action buttons
+                document.querySelector('.action-buttons').style.display = 'none';
+                
+                return;
+            }
+            
+            nextPlayer(); // Move to next player
         }
         
         // Apply a random delay to robot's action
         function robotActionWithDelay() {
-            // Random delay between 3 and 8 seconds
-            const delayTime = Math.floor(Math.random() * 5000) + 3000;
+            // Only proceed if active player is a robot
+            if (!players[activePlayerIndex].isRobot) return;
             
-            setTimeout(() => {
-                robotAction();
-            }, delayTime);
+            const delay = 1000 + Math.random() * 1000; // 1-2 second delay
+            setTimeout(robotAction, delay);
         }
         
         // Simple robot AI
         function robotAction() {
-            // Simple random decision making
-            const action = Math.random();
+            if (!players[activePlayerIndex].isRobot) return;
             
-            if (action < 0.1) {
-                // Fold
-                playerChips += potAmount;
-                potAmount = 0;
-                playerBet = 0;
-                robotBet = 0;
-                updateChips();
-                alert("Robot folds!");
-                setTimeout(startNewGame, 1500);
-            } else if (action < 0.4 && playerBet > robotBet) {
-                // Call
-                const callAmount = playerBet - robotBet;
-                robotChips -= callAmount;
-                robotBet = playerBet;
-                potAmount += callAmount;
-                updateChips();
-                advanceToNextRound();
-            } else if (action < 0.7 && playerBet <= robotBet) {
-                // Check
-                advanceToNextRound();
+            const robot = players[activePlayerIndex];
+            const highestBet = Math.max(...players.map(p => p.bet));
+            const callAmount = highestBet - robot.bet;
+            
+            // Simple AI logic - randomize decisions
+            const random = Math.random();
+            
+            if (callAmount === 0) {
+                // Can check
+                if (random < 0.7) {
+                    // Check (70% chance)
+                    console.log(`${robot.name} checks`);
+                    nextPlayer();
+                } else {
+                    // Raise (30% chance)
+                    console.log(`${robot.name} raises`);
+                    const raiseAmount = bigBlindAmount;
+                    robot.chips -= raiseAmount;
+                    robot.bet += raiseAmount;
+                    potAmount = calculatePotAmount();
+                    updateChips();
+                    nextPlayer();
+                }
             } else {
-                // Raise
-                const raiseAmount = bigBlindAmount;
-                const totalBet = playerBet + raiseAmount - robotBet;
-                
-                robotChips -= totalBet;
-                robotBet = playerBet + raiseAmount;
-                potAmount += totalBet;
-                
-                updateChips();
-                // Enable player action buttons for response
-                setActivePlayer(true); // Set player's turn
-                updateActionButtons();
+                // Must call, raise, or fold
+                if (random < 0.4) {
+                    // Call (40% chance)
+                    console.log(`${robot.name} calls`);
+                    robot.chips -= callAmount;
+                    robot.bet = highestBet;
+                    potAmount = calculatePotAmount();
+                    updateChips();
+                    advanceToNextRound();
+                } else if (random < 0.7) {
+                    // Raise (30% chance)
+                    console.log(`${robot.name} raises`);
+                    const raiseAmount = bigBlindAmount;
+                    robot.chips -= (callAmount + raiseAmount);
+                    robot.bet = highestBet + raiseAmount;
+                    potAmount = calculatePotAmount();
+                    updateChips();
+                    nextPlayer();
+                } else {
+                    // Fold (30% chance)
+                    console.log(`${robot.name} folds`);
+                    robot.folded = true;
+                    
+                    // Check if only one player remains
+                    const activePlayers = players.filter(p => !p.folded);
+                    if (activePlayers.length === 1) {
+                        // Award pot to the remaining player
+                        activePlayers[0].chips += potAmount;
+                        potAmount = 0;
+                        
+                        updateChips();
+                        showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                        
+                        // Hide action buttons
+                        document.querySelector('.action-buttons').style.display = 'none';
+                        
+                        return;
+                    }
+                    
+                    nextPlayer();
+                }
             }
         }
         
         // Advance to the next betting round
         function advanceToNextRound() {
             // Move bets to pot and reset current bets
-            playerBet = 0;
-            robotBet = 0;
+            players.forEach(player => {
+                player.bet = 0;
+            });
             
             switch (currentBettingRound) {
                 case 'preflop':
@@ -720,7 +744,7 @@
             
             // Set active player (dealer acts first after the flop)
             if (currentBettingRound !== 'showdown') {
-                setActivePlayer(dealerPosition === 0);
+                setActivePlayer(dealerIndex);
             }
             
             updateActionButtons();
@@ -739,7 +763,7 @@
                 const checkButton = document.getElementById('check-button');
                 const callButton = document.getElementById('call-button');
                 
-                if (robotBet > playerBet) {
+                if (players[activePlayerIndex].bet < Math.max(...players.map(p => p.bet))) {
                     // Can't check if robot has bet more
                     checkButton.disabled = true;
                     callButton.disabled = false;
@@ -770,7 +794,7 @@
             
             // Now reveal the correct cards for each robot
             for (let r = 0; r < 3; r++) {
-                const robotHand = robotHands[r];
+                const robotHand = players[r+1].cards;
                 if (!robotHand || robotHand.length === 0) continue;
                 
                 for (let c = 0; c < robotHand.length; c++) {
@@ -849,10 +873,10 @@
                 const randomWinner = Math.random() > 0.5;
                 if (randomWinner) {
                     showGameMessage("Falatka wins the pot!");
-                    playerChips += potAmount;
+                    players[0].chips += potAmount;
                 } else {
                     showGameMessage("Robot wins the pot!");
-                    robotChips += potAmount;
+                    players[1].chips += potAmount;
                 }
                 potAmount = 0;
                 updateChips();
