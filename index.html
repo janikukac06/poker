@@ -569,10 +569,24 @@
             // Set robot cards to hidden state (unless revealed)
             players.filter(p => p.isRobot).forEach((robot, robotIndex) => {
                 const robotCards = document.querySelectorAll(`${robot.element} .card`);
-                robotCards.forEach(card => {
-                    card.textContent = '?';
-                    card.classList.remove('red-card');
-                });
+                
+                if (robot.folded) {
+                    // If robot has folded, show empty cards
+                    robotCards.forEach(card => {
+                        card.textContent = '';
+                        card.classList.remove('card-back');
+                        card.classList.remove('red-card');
+                        card.style.backgroundImage = 'none';
+                        card.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    });
+                } else {
+                    // If robot is active, show card backs with gradient
+                    robotCards.forEach(card => {
+                        card.textContent = '';
+                        card.classList.add('card-back');
+                        card.classList.remove('red-card');
+                    });
+                }
             });
         }
         
@@ -600,8 +614,6 @@
             
             updateChips();
             nextPlayer();
-            // Move to next betting round
-            //advanceToNextRound();
         }
         
         function playerRaise() {
