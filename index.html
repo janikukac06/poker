@@ -473,6 +473,7 @@
         
         // Set active player (visual indicator)
         function setActivePlayer(index) {
+            console.log(`setActivePlayer: Setting player ${players[index].name} as active`);
             // Prevent setting a folded player as active
             if (players[index].folded) {
                 console.log(`Attempted to set folded player ${players[index].name} as active. Finding next valid player.`);
@@ -543,6 +544,7 @@
         
         // Move to the next player in turn
         function nextPlayer() {
+            console.log("nextPlayer");
             // Find next player that hasn't folded
             let nextIndex = (activePlayerIndex + 1) % players.length;
             let count = 0;
@@ -710,6 +712,7 @@
         
         // Apply a random delay to robot's action
         function robotActionWithDelay() {
+            console.log("robotActionWithDelay");
             // Only proceed if active player is a robot
             if (!players[activePlayerIndex].isRobot) return;
             
@@ -719,6 +722,7 @@
         
         // Simple robot AI
         function robotAction() {
+            console.log("robotAction");
             if (!players[activePlayerIndex].isRobot) return;
             
             const robot = players[activePlayerIndex];
@@ -796,6 +800,7 @@
         
         // Advance to the next betting round
         function advanceToNextRound() {
+            console.log("advanceToNextRound");
             // Move bets to pot and reset current bets
             players.forEach(player => {
                 player.bet = 0;
