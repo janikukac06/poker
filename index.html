@@ -466,7 +466,9 @@
             });
             
             // Update pot amount
-            document.querySelector('.pot p').textContent = `Pot: ${potAmount}`;
+            const currentBets = calculatePotAmount();
+            const totalPotDisplay = potAmount + currentBets;
+            document.querySelector('.pot p').textContent = `Pot: ${totalPotDisplay}`;
         }
         
         // Update dealer button position
@@ -724,12 +726,19 @@
             // Check if only one player remains
             const activePlayers = players.filter(p => !p.folded);
             if (activePlayers.length === 1) {
+                // Calculate total pot (including current bets)
+                const currentBets = calculatePotAmount();
+                const totalPotWon = potAmount + currentBets;
+                
                 // Award pot to the remaining player
-                activePlayers[0].chips += potAmount;
+                activePlayers[0].chips += totalPotWon;
+                
+                // Clear the pot
                 potAmount = 0;
+                players.forEach(player => player.bet = 0);
                 
                 updateChips();
-                showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                showGameMessage(`${activePlayers[0].name} wins ${totalPotWon} chips!`);
                 console.log("Game over, winner:", activePlayers[0].name);
                 
                 // Disabled buttons until next game
@@ -739,11 +748,10 @@
                 
                 // Hide action buttons
                 document.querySelector('.action-buttons').style.display = 'none';
-                
-                return;
+            } else {
+                updatePlayerCards();
+                nextPlayer(); // Move to next player
             }
-            
-            nextPlayer(); // Move to next player
         }
         
         // Apply a random delay to robot's action
@@ -871,6 +879,10 @@
         function advanceToNextRound() {
             console.log("advanceToNextRound");
             // Move bets to pot and reset current bets
+            potAmount = calculatePotAmount();
+            console.log("Pot amount after advance to next round:", potAmount);
+
+            // Reset current bets and acted flags
             players.forEach(player => {
                 player.bet = 0;
                 player.isActedInCurrentRound = false;
