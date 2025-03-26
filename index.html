@@ -5,45 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Póker Tanuló</title>
     <style>
+        /* Main layout */
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: green;
-            color: white;
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #006633;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .table {
-            width: 90%;
-            max-width: 600px;
-            height: 400px;
-            background-color: darkgreen;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
+            width: 800px;
+            height: 600px;
+            background-color: #008844;
+            border-radius: 200px;
+            border: 15px solid #553311;
             position: relative;
+            padding: 20px;
         }
-        .player, .ai {
+        .robot, .player {
             position: absolute;
             text-align: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
         }
-        .ai {
-            top: 30px;
+        .robot-1 {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .robot-2 {
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+        }
+        .robot-3 {
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
         }
         .player {
-            bottom: 30px;
-        }
-        .pot {
-            position: absolute;
-            top: 50%;
+            bottom: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
+            transform: translateX(-50%);
         }
         .cards {
             display: flex;
@@ -86,7 +94,7 @@
             bottom: 60px;
             right: -15px;
         }
-        .ai .dealer-button {
+        .robot .dealer-button {
             top: 60px;
             right: -15px;
         }
@@ -113,7 +121,7 @@
             bottom: 60px;
             left: -15px;
         }
-        .ai .blind {
+        .robot .blind {
             top: 60px;
             left: -15px;
         }
@@ -126,7 +134,7 @@
         .player .bet-amount {
             top: -30px;
         }
-        .ai .bet-amount {
+        .robot .bet-amount {
             bottom: -30px;
         }
         .action-buttons {
@@ -155,7 +163,7 @@
             border-radius: 5px;
             display: none;
         }
-        .ai .thinking {
+        .robot .thinking {
             top: -25px;
             left: 50%;
             transform: translateX(-50%);
@@ -267,7 +275,7 @@
 
         // Update robot cards in the UI
         function updateRobotCards() {
-            const robotCardElements = document.querySelectorAll('.ai .card');
+            const robotCardElements = document.querySelectorAll('.robot .card');
             
             // Keep the robot's cards hidden with a card back design
             for (let i = 0; i < robotCardElements.length; i++) {
@@ -360,13 +368,13 @@
         
         // Update the chips display
         function updateChips() {
-            document.querySelector('.ai p').textContent = `Robot: ${robotChips}`;
+            document.querySelector('.robot p').textContent = `Robot: ${robotChips}`;
             document.querySelector('.player-info').textContent = `Falatka: ${playerChips}`;
             document.querySelector('.pot p').textContent = `Pot: ${potAmount}`;
             
             // Update bet amounts
             let playerBetElement = document.querySelector('.player .bet-amount');
-            let robotBetElement = document.querySelector('.ai .bet-amount');
+            let robotBetElement = document.querySelector('.robot .bet-amount');
             
             if (playerBet > 0) {
                 playerBetElement.textContent = playerBet;
@@ -386,7 +394,7 @@
         // Update dealer button position
         function updateDealerButton() {
             let playerDealerButton = document.querySelector('.player .dealer-button');
-            let robotDealerButton = document.querySelector('.ai .dealer-button');
+            let robotDealerButton = document.querySelector('.robot .dealer-button');
             
             if (isPlayerDealer) {
                 playerDealerButton.style.display = 'flex';
@@ -400,7 +408,7 @@
         // Update blinds indicators
         function updateBlinds() {
             let playerBlind = document.querySelector('.player .blind');
-            let robotBlind = document.querySelector('.ai .blind');
+            let robotBlind = document.querySelector('.robot .blind');
             
             if (isPlayerDealer) {
                 // Player is dealer, robot has small blind, player has big blind
@@ -430,8 +438,8 @@
         function setActivePlayer(playerActive) {
             isPlayerTurn = playerActive;
             const playerElement = document.querySelector('.player');
-            const robotElement = document.querySelector('.ai');
-            const robotThinking = document.querySelector('.ai .thinking');
+            const robotElement = document.querySelector('.robot');
+            const robotThinking = document.querySelector('.robot .thinking');
             
             if (playerActive) {
                 playerElement.classList.add('active-player');
@@ -621,7 +629,7 @@
 
         // Reveal the robot's cards (for learning purposes)
         function revealRobotCards() {
-            const robotCardElements = document.querySelectorAll('.ai .card');
+            const robotCardElements = document.querySelectorAll('.robot .card');
             
             for (let i = 0; i < robotHand.length; i++) {
                 const card = robotHand[i];
@@ -662,7 +670,29 @@
 </head>
 <body>
     <div class="table">
-        <div class="ai">
+        <div class="robot robot-1">
+            <p>Robot: 1000</p>
+            <div class="cards">
+                <div class="card">?</div>
+                <div class="card">?</div>
+            </div>
+            <div class="dealer-button" style="display: none;">D</div>
+            <div class="blind" style="display: none;">SB</div>
+            <div class="bet-amount" style="display: none;">0</div>
+            <div class="thinking">Thinking...</div>
+        </div>
+        <div class="robot robot-2">
+            <p>Robot: 1000</p>
+            <div class="cards">
+                <div class="card">?</div>
+                <div class="card">?</div>
+            </div>
+            <div class="dealer-button" style="display: none;">D</div>
+            <div class="blind" style="display: none;">SB</div>
+            <div class="bet-amount" style="display: none;">0</div>
+            <div class="thinking">Thinking...</div>
+        </div>
+        <div class="robot robot-3">
             <p>Robot: 1000</p>
             <div class="cards">
                 <div class="card">?</div>
