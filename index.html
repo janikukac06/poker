@@ -368,11 +368,16 @@
             // Reset game state
             potAmount = 0;
             
+            // Clear community cards
+            communityCards = [];
+            updateCommunityCards();
+            
             // Reset all player chips and bets
             players.forEach(player => {
                 player.chips = 1000;
                 player.bet = 0;
                 player.folded = false;
+                player.isActedInCurrentRound = false;
             });
             
             // Randomly select dealer position
