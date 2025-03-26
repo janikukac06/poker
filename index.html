@@ -938,6 +938,67 @@
             }, 2000);
         }
 
+        // Deal the flop (first 3 community cards)
+        function dealFlop() {
+            // Burn a card (discard)
+            deck.pop();
+            
+            // Deal 3 community cards
+            for (let i = 0; i < 3; i++) {
+                communityCards.push(deck.pop());
+            }
+            
+            updateCommunityCards();
+            console.log("Flop dealt:", JSON.parse(JSON.stringify(communityCards)));
+        }
+
+        // Deal the turn (4th community card)
+        function dealTurn() {
+            // Burn a card
+            deck.pop();
+            
+            // Deal the turn card
+            communityCards.push(deck.pop());
+            
+            updateCommunityCards();
+            console.log("Turn dealt:", JSON.parse(JSON.stringify(communityCards)));
+        }
+
+        // Deal the river (5th community card)
+        function dealRiver() {
+            // Burn a card
+            deck.pop();
+            
+            // Deal the river card
+            communityCards.push(deck.pop());
+            
+            updateCommunityCards();
+            console.log("River dealt:", JSON.parse(JSON.stringify(communityCards)));
+        }
+        
+        // Update community cards in the UI
+        function updateCommunityCards() {
+            const communityCardElements = document.querySelectorAll('.pot .card');
+            
+            // Show revealed community cards, keep others hidden
+            for (let i = 0; i < communityCardElements.length; i++) {
+                if (i < communityCards.length) {
+                    const card = communityCards[i];
+                    communityCardElements[i].textContent = `${card.value}${card.suit}`;
+                    
+                    // Apply color for hearts and diamonds
+                    if (card.suit === '♥' || card.suit === '♦') {
+                        communityCardElements[i].classList.add('red-card');
+                    } else {
+                        communityCardElements[i].classList.remove('red-card');
+                    }
+                } else {
+                    communityCardElements[i].textContent = '';
+                    communityCardElements[i].classList.remove('red-card');
+                }
+            }
+        }
+
         // Initialize the game when the page loads
         window.onload = function() {
             startNewGame();
