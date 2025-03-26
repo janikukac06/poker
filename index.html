@@ -232,7 +232,9 @@
         let communityCards = [];
         
         // Game state
-        let isPlayerDealer = true; // Player starts as dealer
+        let dealerPosition = 0; // 0 = player, 1-3 = robots
+        let smallBlindPosition = 1; // Position left of dealer
+        let bigBlindPosition = 2; // Position left of small blind
         let smallBlindAmount = 10;
         let bigBlindAmount = 20;
         let playerChips = 1000;
@@ -368,8 +370,12 @@
             playerBet = 0;
             robotBet = 0;
             
-            // Toggle dealer position for the next game
-            isPlayerDealer = !isPlayerDealer;
+            // Randomly select dealer position
+            dealerPosition = Math.floor(Math.random() * 4); // 0 = player, 1-3 = robots
+            
+            // Set small blind and big blind positions (left of dealer)
+            smallBlindPosition = (dealerPosition + 1) % 4;
+            bigBlindPosition = (dealerPosition + 2) % 4;
             
             // Initialize the deck and deal cards
             initializeDeck();
@@ -388,12 +394,12 @@
             
             // Set active player turn
             // Player after big blind acts first
-            if (isPlayerDealer) {
-                // If player is dealer, robot acts first (as small blind)
+            if (dealerPosition === 0) {
+                // If player is dealer, robot acts first
                 setActivePlayer(false);
                 robotActionWithDelay(); // Robot makes first move
             } else {
-                // If robot is dealer, player acts first (as small blind)
+                // If robot is dealer, player acts first
                 setActivePlayer(true);
             }
             
@@ -403,16 +409,22 @@
         
         // Place blinds based on dealer position
         function placeBlinds() {
-            if (isPlayerDealer) {
-                // Player is dealer, robot posts small blind, player posts big blind
+            if (smallBlindPosition === 0) {
+                // Player is small blind
+                playerBet = smallBlindAmount;
+                playerChips -= smallBlindAmount;
+            } else {
+                // Robot is small blind
                 robotBet = smallBlindAmount;
                 robotChips -= smallBlindAmount;
+            }
+            
+            if (bigBlindPosition === 0) {
+                // Player is big blind
                 playerBet = bigBlindAmount;
                 playerChips -= bigBlindAmount;
             } else {
-                // Robot is dealer, player posts small blind, robot posts big blind
-                playerBet = smallBlindAmount;
-                playerChips -= smallBlindAmount;
+                // Robot is big blind
                 robotBet = bigBlindAmount;
                 robotChips -= bigBlindAmount;
             }
@@ -451,44 +463,68 @@
         // Update dealer button position
         function updateDealerButton() {
             let playerDealerButton = document.querySelector('.player .dealer-button');
-            let robotDealerButton = document.querySelector('.robot .dealer-button');
+            let robotDealerButtons = [
+                document.querySelector('.robot-1 .dealer-button'),
+                document.querySelector('.robot-2 .dealer-button'),
+                document.querySelector('.robot-3 .dealer-button')
+            ];
             
-            if (isPlayerDealer) {
+            // Hide all dealer buttons first
+            playerDealerButton.style.display = 'none';
+            robotDealerButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+            
+            // Show the dealer button for the current dealer
+            if (dealerPosition === 0) {
                 playerDealerButton.style.display = 'flex';
-                robotDealerButton.style.display = 'none';
             } else {
-                playerDealerButton.style.display = 'none';
-                robotDealerButton.style.display = 'flex';
+                robotDealerButtons[dealerPosition - 1].style.display = 'flex';
             }
         }
         
         // Update blinds indicators
         function updateBlinds() {
             let playerBlind = document.querySelector('.player .blind');
-            let robotBlind = document.querySelector('.robot .blind');
+            let robotBlinds = [
+                document.querySelector('.robot-1 .blind'),
+                document.querySelector('.robot-2 .blind'),
+                document.querySelector('.robot-3 .blind')
+            ];
             
-            if (isPlayerDealer) {
-                // Player is dealer, robot has small blind, player has big blind
-                playerBlind.textContent = 'BB';
-                playerBlind.classList.remove('small-blind');
-                playerBlind.classList.add('big-blind');
-                
-                robotBlind.textContent = 'SB';
-                robotBlind.classList.add('small-blind');
-                robotBlind.classList.remove('big-blind');
-            } else {
-                // Robot is dealer, player has small blind, robot has big blind
+            // Hide all blind indicators first
+            playerBlind.style.display = 'none';
+            robotBlinds.forEach(blind => {
+                blind.style.display = 'none';
+            });
+            
+            // Set small blind indicator
+            if (smallBlindPosition === 0) {
                 playerBlind.textContent = 'SB';
                 playerBlind.classList.add('small-blind');
                 playerBlind.classList.remove('big-blind');
-                
-                robotBlind.textContent = 'BB';
-                robotBlind.classList.remove('small-blind');
-                robotBlind.classList.add('big-blind');
+                playerBlind.style.display = 'flex';
+            } else {
+                let sbBlind = robotBlinds[smallBlindPosition - 1];
+                sbBlind.textContent = 'SB';
+                sbBlind.classList.add('small-blind');
+                sbBlind.classList.remove('big-blind');
+                sbBlind.style.display = 'flex';
             }
             
-            playerBlind.style.display = 'flex';
-            robotBlind.style.display = 'flex';
+            // Set big blind indicator
+            if (bigBlindPosition === 0) {
+                playerBlind.textContent = 'BB';
+                playerBlind.classList.remove('small-blind');
+                playerBlind.classList.add('big-blind');
+                playerBlind.style.display = 'flex';
+            } else {
+                let bbBlind = robotBlinds[bigBlindPosition - 1];
+                bbBlind.textContent = 'BB';
+                bbBlind.classList.remove('small-blind');
+                bbBlind.classList.add('big-blind');
+                bbBlind.style.display = 'flex';
+            }
         }
         
         // Set active player (visual indicator)
@@ -647,7 +683,7 @@
             
             // Set active player (dealer acts first after the flop)
             if (currentBettingRound !== 'showdown') {
-                setActivePlayer(isPlayerDealer);
+                setActivePlayer(dealerPosition === 0);
             }
             
             updateActionButtons();
