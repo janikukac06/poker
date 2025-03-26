@@ -848,6 +848,7 @@
             // Move bets to pot and reset current bets
             players.forEach(player => {
                 player.bet = 0;
+                player.isActedInCurrentRound = false;
             });
             
             switch (currentBettingRound) {
