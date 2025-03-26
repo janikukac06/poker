@@ -183,6 +183,27 @@
             z-index: 100;
             max-width: 80%;
         }
+        .pot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        .pot p {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .pot .cards {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .red-card {
+            color: red !important;
+        }
         /* Adjust sizes for smaller viewport */
         @media (max-width: 914px), (max-height: 412px) {
             .table {
