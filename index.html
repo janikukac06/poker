@@ -473,6 +473,42 @@
         
         // Set active player (visual indicator)
         function setActivePlayer(index) {
+            // Prevent setting a folded player as active
+            if (players[index].folded) {
+                console.log(`Attempted to set folded player ${players[index].name} as active. Finding next valid player.`);
+                // Find the next non-folded player
+                let nextValidIndex = index;
+                let count = 0;
+                
+                // Loop through players until finding one that hasn't folded
+                // Limited by player count to prevent infinite loop
+                while (count < players.length) {
+                    nextValidIndex = (nextValidIndex + 1) % players.length;
+                    if (!players[nextValidIndex].folded) {
+                        break;
+                    }
+                    count++;
+                }
+                
+                // If all players are folded except one, the game is over
+                if (count >= players.length - 1) {
+                    const winner = players.find(p => !p.folded);
+                    if (winner) {
+                        winner.chips += potAmount;
+                        potAmount = 0;
+                        updateChips();
+                        showGameMessage(`${winner.name} wins ${potAmount} chips!`);
+                        console.log("Game over, everyone folded except:", winner.name);
+                        document.querySelector('.action-buttons').style.display = 'none';
+                        return;
+                    }
+                }
+                
+                // Set the non-folded player as active
+                index = nextValidIndex;
+                console.log(`Setting next valid player ${players[index].name} as active instead`);
+            }
+            
             activePlayerIndex = index;
             isPlayerTurn = !players[activePlayerIndex].isRobot;
             
