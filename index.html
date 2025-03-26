@@ -168,7 +168,21 @@
             left: 50%;
             transform: translateX(-50%);
         }
-        
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+            z-index: 100;
+            max-width: 80%;
+        }
         /* Adjust sizes for smaller viewport */
         @media (max-width: 914px), (max-height: 412px) {
             .table {
@@ -214,7 +228,7 @@
         const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [];
         let playerHand = [];
-        let robotHand = [];
+        let robotHands = [[], [], []];
         let communityCards = [];
         
         // Game state
@@ -249,14 +263,18 @@
         function dealCards() {
             // Reset hands and community cards
             playerHand = [];
-            robotHand = [];
+            for (let i = 0; i < 3; i++) {
+                robotHands[i] = [];
+            }
             communityCards = [];
             
             // Deal 2 cards to each player
             playerHand.push(deck.pop());
-            robotHand.push(deck.pop());
             playerHand.push(deck.pop());
-            robotHand.push(deck.pop());
+            for (let i = 0; i < 3; i++) {
+                robotHands[i].push(deck.pop());
+                robotHands[i].push(deck.pop());
+            }
             
             // Update the UI
             updatePlayerCards();
@@ -666,17 +684,87 @@
             }
         }
 
-        // Reveal the robot's cards (for learning purposes)
+        // Reveal the robot's cards
         function revealRobotCards() {
             const robotCardElements = document.querySelectorAll('.robot .card');
             
-            for (let i = 0; i < robotHand.length; i++) {
-                const card = robotHand[i];
-                const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
-                robotCardElements[i].innerHTML = `${card.value}${card.suit}`;
-                robotCardElements[i].style.color = color;
-                robotCardElements[i].classList.remove('card-back');
+            // Reset all cards to hide first
+            robotCardElements.forEach(card => {
+                card.innerHTML = '?';
+                card.classList.add('card-back');
+                card.style.color = 'white';
+            });
+            
+            // Now reveal the correct cards for each robot
+            for (let r = 0; r < 3; r++) {
+                const robotHand = robotHands[r];
+                if (!robotHand || robotHand.length === 0) continue;
+                
+                for (let c = 0; c < robotHand.length; c++) {
+                    const card = robotHand[c];
+                    const cardElement = document.querySelector(`.robot-${r+1} .card:nth-child(${c+1})`);
+                    
+                    if (cardElement && card) {
+                        const color = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+                        cardElement.innerHTML = `${card.value}${card.suit}`;
+                        cardElement.style.color = color;
+                        cardElement.classList.remove('card-back');
+                    }
+                }
             }
+        }
+
+        // Show game result message
+        function showGameMessage(message) {
+            const gameMessage = document.querySelector('.game-message');
+            // Clear any previous content
+            gameMessage.innerHTML = '';
+            
+            // Add message text
+            const messageText = document.createElement('div');
+            messageText.textContent = message;
+            gameMessage.appendChild(messageText);
+            
+            // Add a button to close the message and a button to start a new game
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.marginTop = '15px';
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.justifyContent = 'center';
+            buttonContainer.style.gap = '10px';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.onclick = function() { 
+                gameMessage.style.display = 'none';
+            };
+            closeBtn.style.padding = '5px 10px';
+            closeBtn.style.backgroundColor = '#e74c3c';
+            closeBtn.style.border = 'none';
+            closeBtn.style.borderRadius = '3px';
+            closeBtn.style.color = 'white';
+            closeBtn.style.fontWeight = 'bold';
+            closeBtn.style.cursor = 'pointer';
+            
+            const newGameBtn = document.createElement('button');
+            newGameBtn.textContent = 'New Game';
+            newGameBtn.onclick = function() {
+                gameMessage.style.display = 'none';
+                startNewGame();
+            };
+            newGameBtn.style.padding = '5px 10px';
+            newGameBtn.style.backgroundColor = '#2ecc71';
+            newGameBtn.style.border = 'none';
+            newGameBtn.style.borderRadius = '3px';
+            newGameBtn.style.color = 'white';
+            newGameBtn.style.fontWeight = 'bold';
+            newGameBtn.style.cursor = 'pointer';
+            
+            buttonContainer.appendChild(closeBtn);
+            buttonContainer.appendChild(newGameBtn);
+            gameMessage.appendChild(buttonContainer);
+            
+            // Display the message
+            gameMessage.style.display = 'block';
         }
 
         // Showdown - determine winner
@@ -687,10 +775,10 @@
             setTimeout(() => {
                 const randomWinner = Math.random() > 0.5;
                 if (randomWinner) {
-                    alert("Falatka wins the pot!");
+                    showGameMessage("Falatka wins the pot!");
                     playerChips += potAmount;
                 } else {
-                    alert("Robot wins the pot!");
+                    showGameMessage("Robot wins the pot!");
                     robotChips += potAmount;
                 }
                 potAmount = 0;
@@ -775,5 +863,6 @@
         <button onclick="startNewGame()">New Game</button>
         <button onclick="revealRobotCards()">Reveal Robot's Cards</button>
     </div>
+    <div class="game-message"></div>
 </body>
 </html>
