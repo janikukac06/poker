@@ -515,6 +515,24 @@
                 count++;
             }
             
+            // Check if all non-folded players have called the highest bet
+            const highestBet = Math.max(...players.map(p => p.bet));
+            const nonFoldedPlayers = players.filter(p => !p.folded);
+            
+            // If all active players have the same bet amount, move to next round
+            const allBetsEqual = nonFoldedPlayers.every(p => p.bet === highestBet);
+            
+            // Also check if we've completed a full round of betting
+            // (this ensures everyone has had a chance to act since the last bet increase)
+            const startingBettingIndex = (bigBlindIndex + 1) % players.length; // First to act preflop
+            const completedBettingRound = nextIndex === startingBettingIndex;
+            
+            if (allBetsEqual && completedBettingRound) {
+                // All players have matched the bet, move to next round
+                advanceToNextRound();
+                return;
+            }
+            
             setActivePlayer(nextIndex);
             
             // If next player is a robot, trigger its action
@@ -522,7 +540,7 @@
                 robotActionWithDelay();
             }
         }
-        
+
         // Update player cards in the UI
         function updatePlayerCards() {
             // Update human player's cards
@@ -581,9 +599,9 @@
             potAmount = calculatePotAmount();
             
             updateChips();
-            
+            nextPlayer();
             // Move to next betting round
-            advanceToNextRound();
+            //advanceToNextRound();
         }
         
         function playerRaise() {
@@ -678,7 +696,7 @@
                     robot.bet = highestBet;
                     potAmount = calculatePotAmount();
                     updateChips();
-                    advanceToNextRound();
+                    nextPlayer();
                 } else if (random < 0.7) {
                     // Raise (30% chance)
                     console.log(`${robot.name} raises`);
@@ -742,7 +760,7 @@
             
             updateChips();
             
-            // Set active player (dealer acts first after the flop)
+            // Set active player (acts first player after the dealer after the flop)
             if (currentBettingRound !== 'showdown') {
                 setActivePlayer((dealerIndex + 1) % players.length);
             }
