@@ -880,7 +880,16 @@
             
             // Set active player (acts first player after the dealer after the flop)
             if (currentBettingRound !== 'showdown') {
-                setActivePlayer((dealerIndex + 1) % players.length);
+                // First to act after the flop is the player after the dealer
+                const nextPlayerIndex = (dealerIndex + 1) % players.length;
+                setActivePlayer(nextPlayerIndex);
+                
+                // If the active player is a robot, trigger its action
+                console.log("Active player after advancing round:", players[activePlayerIndex].name);
+                if (players[activePlayerIndex].isRobot) {
+                    console.log("First to act is a robot, triggering robot action");
+                    robotActionWithDelay();
+                }
             }
             
             updateActionButtons();
