@@ -570,16 +570,16 @@
                 });
             } else {
                 // Enable player action buttons
-                document.querySelectorAll('.action-buttons button').forEach(button => {
+                updateActionButtons();
+                /*document.querySelectorAll('.action-buttons button').forEach(button => {
                     button.disabled = false;
-                });
+                });*/
             }
         }
         
         // Move to the next player in turn
         function nextPlayer() {
             console.log("nextPlayer");
-            updateActionButtons();
             // Mark current player as having acted in this round
             players[activePlayerIndex].isActedInCurrentRound = true;
             console.log(`Player ${players[activePlayerIndex].name} has acted this round`);
