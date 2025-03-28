@@ -654,6 +654,7 @@
                         card.classList.remove('red-card');
                         card.style.backgroundImage = 'none';
                         card.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                        card.style.color = '';
                     });
                 } else {
                     // If robot is active, show card backs with gradient
@@ -661,6 +662,10 @@
                         card.textContent = '';
                         card.classList.add('card-back');
                         card.classList.remove('red-card');
+                        // Clear any inline styles that might override the card-back class
+                        card.style.backgroundImage = '';
+                        card.style.backgroundColor = '';
+                        card.style.color = '';
                     });
                 }
             });
