@@ -1078,6 +1078,366 @@
             gameMessage.style.display = 'block';
         }
 
+        // Hand evaluation functions
+        function evaluateHand(cards) {
+            // Combine hole cards and community cards, then find best 5-card hand
+            if (cards.length < 5) return { rank: 0, name: 'Invalid Hand', value: [] };
+            
+            // Sort cards by value (numerically, with face cards converted)
+            const sortedCards = [...cards].sort((a, b) => {
+                const valueA = cardValue(a.value);
+                const valueB = cardValue(b.value);
+                return valueB - valueA; // descending order
+            });
+            
+            // Check for different hand types (from highest to lowest)
+            let result = checkRoyalFlush(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkStraightFlush(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkFourOfAKind(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkFullHouse(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkFlush(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkStraight(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkThreeOfAKind(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkTwoPair(sortedCards);
+            if (result.rank) return result;
+            
+            result = checkOnePair(sortedCards);
+            if (result.rank) return result;
+            
+            // High card
+            return {
+                rank: 1,
+                name: 'High Card',
+                value: sortedCards.slice(0, 5).map(card => cardValue(card.value))
+            };
+        }
+        
+        // Convert card values to numeric values for comparison
+        function cardValue(value) {
+            switch (value) {
+                case 'A': return 14;
+                case 'K': return 13;
+                case 'Q': return 12;
+                case 'J': return 11;
+                default: return parseInt(value);
+            }
+        }
+        
+        // Check for royal flush (A, K, Q, J, 10 of same suit)
+        function checkRoyalFlush(cards) {
+            const suits = ['♥', '♦', '♠', '♣'];
+            
+            for (let suit of suits) {
+                const sameSuit = cards.filter(card => card.suit === suit);
+                if (sameSuit.length >= 5) {
+                    const values = sameSuit.map(card => cardValue(card.value));
+                    if (values.includes(14) && values.includes(13) && values.includes(12) && 
+                        values.includes(11) && values.includes(10)) {
+                        return {
+                            rank: 10,
+                            name: 'Royal Flush',
+                            value: [14, 13, 12, 11, 10]
+                        };
+                    }
+                }
+            }
+            return { rank: 0 };
+        }
+        
+        // Check for straight flush (5 consecutive cards of same suit)
+        function checkStraightFlush(cards) {
+            const suits = ['♥', '♦', '♠', '♣'];
+            
+            for (let suit of suits) {
+                const sameSuit = cards.filter(card => card.suit === suit);
+                if (sameSuit.length >= 5) {
+                    const result = checkStraightInCards(sameSuit);
+                    if (result.rank) {
+                        return {
+                            rank: 9,
+                            name: 'Straight Flush',
+                            value: result.value
+                        };
+                    }
+                }
+            }
+            return { rank: 0 };
+        }
+        
+        // Check for four of a kind
+        function checkFourOfAKind(cards) {
+            const valueCounts = getValueCounts(cards);
+            
+            for (let value in valueCounts) {
+                if (valueCounts[value] === 4) {
+                    const numValue = parseInt(value);
+                    const kickers = cards
+                        .filter(card => cardValue(card.value) !== numValue)
+                        .map(card => cardValue(card.value))
+                        .slice(0, 1);
+                    
+                    return {
+                        rank: 8,
+                        name: 'Four of a Kind',
+                        value: [numValue, numValue, numValue, numValue, ...kickers]
+                    };
+                }
+            }
+            return { rank: 0 };
+        }
+        
+        // Check for full house (three of a kind + pair)
+        function checkFullHouse(cards) {
+            const valueCounts = getValueCounts(cards);
+            let threeOfAKind = null;
+            let pair = null;
+            
+            // Find highest three of a kind
+            for (let value in valueCounts) {
+                const numValue = parseInt(value);
+                if (valueCounts[value] >= 3) {
+                    if (!threeOfAKind || numValue > threeOfAKind) {
+                        threeOfAKind = numValue;
+                    }
+                }
+            }
+            
+            // Find highest pair different from three of a kind
+            if (threeOfAKind) {
+                for (let value in valueCounts) {
+                    const numValue = parseInt(value);
+                    if (numValue !== threeOfAKind && valueCounts[value] >= 2) {
+                        if (!pair || numValue > pair) {
+                            pair = numValue;
+                        }
+                    }
+                }
+                
+                if (pair) {
+                    return {
+                        rank: 7,
+                        name: 'Full House',
+                        value: [threeOfAKind, threeOfAKind, threeOfAKind, pair, pair]
+                    };
+                }
+            }
+            
+            return { rank: 0 };
+        }
+        
+        // Check for flush (5 cards of same suit)
+        function checkFlush(cards) {
+            const suits = ['♥', '♦', '♠', '♣'];
+            
+            for (let suit of suits) {
+                const sameSuit = cards.filter(card => card.suit === suit);
+                if (sameSuit.length >= 5) {
+                    const values = sameSuit
+                        .map(card => cardValue(card.value))
+                        .sort((a, b) => b - a)
+                        .slice(0, 5);
+                    
+                    return {
+                        rank: 6,
+                        name: 'Flush',
+                        value: values
+                    };
+                }
+            }
+            return { rank: 0 };
+        }
+        
+        // Check for straight (5 consecutive cards)
+        function checkStraight(cards) {
+            return checkStraightInCards(cards);
+        }
+        
+        // Helper for checking straight in a set of cards
+        function checkStraightInCards(cards) {
+            // Get unique values sorted in descending order
+            const values = [...new Set(cards.map(card => cardValue(card.value)))].sort((a, b) => b - a);
+            
+            // Special case: A-5-4-3-2 straight
+            if (values.includes(14) && values.includes(5) && values.includes(4) && 
+                values.includes(3) && values.includes(2)) {
+                return {
+                    rank: 5,
+                    name: 'Straight',
+                    value: [5, 4, 3, 2, 1] // Ace is treated as 1 in this case
+                };
+            }
+            
+            // Check for 5 consecutive values
+            for (let i = 0; i <= values.length - 5; i++) {
+                if (values[i] - values[i + 4] === 4) {
+                    return {
+                        rank: 5,
+                        name: 'Straight',
+                        value: values.slice(i, i + 5)
+                    };
+                }
+            }
+            
+            return { rank: 0 };
+        }
+        
+        // Check for three of a kind
+        function checkThreeOfAKind(cards) {
+            const valueCounts = getValueCounts(cards);
+            
+            for (let value in valueCounts) {
+                if (valueCounts[value] === 3) {
+                    const numValue = parseInt(value);
+                    const kickers = cards
+                        .filter(card => cardValue(card.value) !== numValue)
+                        .map(card => cardValue(card.value))
+                        .slice(0, 2);
+                    
+                    return {
+                        rank: 4,
+                        name: 'Three of a Kind',
+                        value: [numValue, numValue, numValue, ...kickers]
+                    };
+                }
+            }
+            return { rank: 0 };
+        }
+        
+        // Check for two pair
+        function checkTwoPair(cards) {
+            const valueCounts = getValueCounts(cards);
+            const pairs = [];
+            
+            for (let value in valueCounts) {
+                if (valueCounts[value] >= 2) {
+                    pairs.push(parseInt(value));
+                }
+            }
+            
+            if (pairs.length >= 2) {
+                // Sort pairs by value (descending)
+                pairs.sort((a, b) => b - a);
+                
+                // Get highest two pairs
+                const highestPairs = pairs.slice(0, 2);
+                
+                // Get kicker
+                const kickers = cards
+                    .filter(card => !highestPairs.includes(cardValue(card.value)))
+                    .map(card => cardValue(card.value))
+                    .slice(0, 1);
+                
+                return {
+                    rank: 3,
+                    name: 'Two Pair',
+                    value: [highestPairs[0], highestPairs[0], highestPairs[1], highestPairs[1], ...kickers]
+                };
+            }
+            
+            return { rank: 0 };
+        }
+        
+        // Check for one pair
+        function checkOnePair(cards) {
+            const valueCounts = getValueCounts(cards);
+            
+            for (let value in valueCounts) {
+                if (valueCounts[value] >= 2) {
+                    const numValue = parseInt(value);
+                    const kickers = cards
+                        .filter(card => cardValue(card.value) !== numValue)
+                        .map(card => cardValue(card.value))
+                        .slice(0, 3);
+                    
+                    return {
+                        rank: 2,
+                        name: 'One Pair',
+                        value: [numValue, numValue, ...kickers]
+                    };
+                }
+            }
+            
+            return { rank: 0 };
+        }
+        
+        // Helper to count card values
+        function getValueCounts(cards) {
+            const counts = {};
+            
+            cards.forEach(card => {
+                const value = cardValue(card.value);
+                counts[value] = (counts[value] || 0) + 1;
+            });
+            
+            return counts;
+        }
+        
+        // Compare two hands to determine the winner
+        function compareHands(hand1, hand2) {
+            // First compare by rank
+            if (hand1.rank !== hand2.rank) {
+                return hand1.rank - hand2.rank;
+            }
+            
+            // If ranks are equal, compare individual card values
+            for (let i = 0; i < hand1.value.length; i++) {
+                if (hand1.value[i] !== hand2.value[i]) {
+                    return hand1.value[i] - hand2.value[i];
+                }
+            }
+            
+            // If all card values are equal, it's a tie
+            return 0;
+        }
+        
+        // Determine the best 5-card hand from 7 cards (2 hole cards + 5 community cards)
+        function getBestHand(holeCards, communityCards) {
+            const allCards = [...holeCards, ...communityCards];
+            
+            // Generate all possible 5-card combinations
+            const combinations = [];
+            
+            // We need to choose 5 cards from 7 cards (C(7,5) = 21 combinations)
+            for (let i = 0; i < allCards.length - 4; i++) {
+                for (let j = i + 1; j < allCards.length - 3; j++) {
+                    for (let k = j + 1; k < allCards.length - 2; k++) {
+                        for (let l = k + 1; l < allCards.length - 1; l++) {
+                            for (let m = l + 1; m < allCards.length; m++) {
+                                combinations.push([allCards[i], allCards[j], allCards[k], allCards[l], allCards[m]]);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Evaluate each combination and find the best hand
+            let bestHand = null;
+            
+            for (let combo of combinations) {
+                const evaluation = evaluateHand(combo);
+                
+                if (!bestHand || compareHands(evaluation, bestHand) > 0) {
+                    bestHand = evaluation;
+                }
+            }
+            
+            return bestHand;
+        }
+        
         // Showdown - determine winner
         function showdown() {
             console.log("Showdown round");
@@ -1089,19 +1449,38 @@
             // Reveal all robot cards
             revealRobotCards();
             
-            // For now, just give pot to the player (will implement hand evaluation later)
-            const player = players.find(p => !p.isRobot);
+            // Evaluate all hands of non-folded players
+            const activePlayers = players.filter(p => !p.folded);
+            const evaluations = [];
+            
+            activePlayers.forEach(player => {
+                const bestHand = getBestHand(player.cards, communityCards);
+                evaluations.push({
+                    player,
+                    hand: bestHand
+                });
+                console.log(`${player.name}'s hand: ${bestHand.name}`);
+            });
+            
+            // Sort evaluations by hand strength (descending)
+            evaluations.sort((a, b) => compareHands(a.hand, b.hand));
+            
+            // The winner is the last player (highest hand)
+            const winner = evaluations[evaluations.length - 1].player;
+            const winningHand = evaluations[evaluations.length - 1].hand;
+            
+            // Award pot to winner
             const winAmount = potAmount;
-            player.chips += potAmount;
+            winner.chips += potAmount;
             potAmount = 0;
+            
             // Reset all player bets
             players.forEach(p => {
                 p.bet = 0;
             });
+            
             updateChips();
-
-            showGameMessage(`${player.name} wins ${winAmount} chips!`);
-
+            showGameMessage(`${winner.name} wins ${winAmount} chips with ${winningHand.name}!`);
         }
 
         // Deal the flop (first 3 community cards)
