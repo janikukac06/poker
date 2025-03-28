@@ -1043,9 +1043,10 @@
                 });
                 return;
             } else {
-                // Make sure all buttons are visible by default
+                // Make sure all buttons are visible by default and explicitly enabled
                 document.querySelectorAll('.action-buttons button').forEach(button => {
                     button.style.display = 'inline-block';
+                    button.disabled = false;
                 });
             }
             
@@ -1063,9 +1064,15 @@
             
             // Check button - only shown if no one has bet more than player
             checkButton.style.display = playerBet < highestBet ? 'none' : 'inline-block';
+            if (checkButton.style.display !== 'none') {
+                checkButton.disabled = false;
+            }
             
             // Call button - only shown if there's something to call and player has enough chips
             callButton.style.display = (playerBet >= highestBet || player.chips < amountToCall) ? 'none' : 'inline-block';
+            if (callButton.style.display !== 'none') {
+                callButton.disabled = false;
+            }
             
             // Update call button text to show amount
             if (amountToCall > 0) {
@@ -1077,9 +1084,15 @@
             // Raise button - only shown if player has enough chips to raise
             const minRaiseAmount = Math.max(bigBlindAmount, highestBet * 2 - playerBet);
             raiseButton.style.display = player.chips < minRaiseAmount ? 'none' : 'inline-block';
+            if (raiseButton.style.display !== 'none') {
+                raiseButton.disabled = false;
+            }
             
             // Fold button - only shown if there's something to fold to
             foldButton.style.display = highestBet <= playerBet ? 'none' : 'inline-block';
+            if (foldButton.style.display !== 'none') {
+                foldButton.disabled = false;
+            }
         }
         
         // Reveal the robot's cards
