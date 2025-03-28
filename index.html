@@ -579,6 +579,7 @@
         // Move to the next player in turn
         function nextPlayer() {
             console.log("nextPlayer");
+            updateActionButtons();
             // Mark current player as having acted in this round
             players[activePlayerIndex].isActedInCurrentRound = true;
             console.log(`Player ${players[activePlayerIndex].name} has acted this round`);
@@ -965,20 +966,16 @@
             const foldButton = document.getElementById('fold-button');
             
             // Check button - only enabled if no one has bet more than player
-            //checkButton.disabled = playerBet < highestBet;
+            checkButton.disabled = playerBet < highestBet;
             
             // Call button - only enabled if there's something to call
-            //callButton.disabled = playerBet >= highestBet || player.chips < amountToCall;
+            callButton.disabled = playerBet >= highestBet || player.chips < amountToCall;
             
             // Update call button text to show amount
             if (amountToCall > 0) {
-                checkButton.disabled = true;
                 callButton.textContent = `Call ${amountToCall}`;
-                callButton.disabled = false;
             } else {
-                callButton.disabled = true;
                 callButton.textContent = 'Call';
-                checkButton.disabled = false;
             }
             
             // Raise button - only enabled if player has enough chips to raise
