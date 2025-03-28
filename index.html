@@ -939,31 +939,52 @@
             
             if (currentBettingRound === 'none' || currentBettingRound === 'showdown') {
                 actionButtons.style.display = 'none';
+                return;
             } else {
                 actionButtons.style.display = 'flex';
-                
-                // Enable/disable buttons based on context
-                const checkButton = document.getElementById('check-button');
-                const callButton = document.getElementById('call-button');
-                
-                if (players[activePlayerIndex].bet < Math.max(...players.map(p => p.bet))) {
-                    // Can't check if robot has bet more
-                    checkButton.disabled = true;
-                    callButton.disabled = false;
-                } else {
-                    checkButton.disabled = false;
-                    callButton.disabled = true;
-                }
-                
-                // If it's not player's turn, disable all buttons
-                if (!isPlayerTurn) {
-                    document.querySelectorAll('.action-buttons button').forEach(button => {
-                        button.disabled = true;
-                    });
-                }
             }
+            
+            // If it's not player's turn, disable all buttons
+            if (!isPlayerTurn) {
+                document.querySelectorAll('.action-buttons button').forEach(button => {
+                    button.disabled = true;
+                });
+                return;
+            }
+            
+            // Get player and highest bet information
+            const player = players.find(p => !p.isRobot);
+            const highestBet = Math.max(...players.map(p => p.bet));
+            const playerBet = player.bet;
+            const amountToCall = highestBet - playerBet;
+            
+            // Enable/disable buttons based on context
+            const checkButton = document.getElementById('check-button');
+            const callButton = document.getElementById('call-button');
+            const raiseButton = document.getElementById('raise-button');
+            const foldButton = document.getElementById('fold-button');
+            
+            // Check button - only enabled if no one has bet more than player
+            checkButton.disabled = playerBet < highestBet;
+            
+            // Call button - only enabled if there's something to call
+            callButton.disabled = playerBet >= highestBet || player.chips < amountToCall;
+            
+            // Update call button text to show amount
+            if (amountToCall > 0) {
+                callButton.textContent = `Call ${amountToCall}`;
+            } else {
+                callButton.textContent = 'Call';
+            }
+            
+            // Raise button - only enabled if player has enough chips to raise
+            const minRaiseAmount = Math.max(bigBlindAmount, highestBet * 2 - playerBet);
+            raiseButton.disabled = player.chips < minRaiseAmount;
+            
+            // Fold button - only enabled if there's something to fold to
+            foldButton.disabled = highestBet <= playerBet;
         }
-
+        
         // Reveal the robot's cards
         function revealRobotCards() {
             const robotCardElements = document.querySelectorAll('.robot .card');
