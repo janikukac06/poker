@@ -141,7 +141,13 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         .active-player {
             border: 3px solid red;
@@ -283,6 +289,47 @@
                 font-size: 20px;
             }
         }
+
+        /* Button container styles */
+        .buttons-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        /* Button styles */
+        button {
+            padding: 8px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            background-color: #336699;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #4477aa;
+        }
+
+        #check-button { background-color: #339933; }
+        #check-button:hover { background-color: #44aa44; }
+
+        #call-button { background-color: #3377bb; }
+        #call-button:hover { background-color: #4488cc; }
+
+        #raise-button { background-color: #aa6633; }
+        #raise-button:hover { background-color: #bb7744; }
+
+        #fold-button { background-color: #993333; }
+        #fold-button:hover { background-color: #aa4444; }
     </style>
     <script>
         // Card definitions
@@ -793,12 +840,7 @@
                 
                 updateChips();
                 showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
-                console.log("Game over, winner:", activePlayers[0].name);
-                
-                // Disabled buttons until next game
-                document.querySelectorAll('.action-buttons button').forEach(button => {
-                    button.disabled = true;
-                });
+                potAmount = 0;
                 
                 // Hide action buttons
                 document.querySelector('.action-buttons').style.display = 'none';
@@ -1721,16 +1763,19 @@
         </div>
     </div>
     
-    <div class="action-buttons" style="display: none; margin-top: 10px;">
-        <button id="check-button" onclick="playerCheck()">Check</button>
-        <button id="call-button" onclick="playerCall()">Call</button>
-        <button id="raise-button" onclick="playerRaise()">Raise</button>
-        <button id="fold-button" onclick="playerFold()">Fold</button>
-    </div>
-    
-    <div class="controls" style="margin-top: 20px; text-align: center;">
-        <button onclick="startNewGame()">New Game</button>
-        <button onclick="revealRobotCards()">Reveal Robot's Cards</button>
+    <!-- Create a dedicated container for all buttons -->
+    <div class="buttons-container">
+        <div class="action-buttons" style="display: none;">
+            <button id="check-button" onclick="playerCheck()">Check</button>
+            <button id="call-button" onclick="playerCall()">Call</button>
+            <button id="raise-button" onclick="playerRaise()">Raise</button>
+            <button id="fold-button" onclick="playerFold()">Fold</button>
+        </div>
+        
+        <div class="controls">
+            <button onclick="startNewGame()">New Game</button>
+            <button onclick="revealRobotCards()">Reveal Robot's Cards</button>
+        </div>
     </div>
     <div class="game-message"></div>
 </body>
