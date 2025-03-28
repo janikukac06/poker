@@ -623,9 +623,24 @@
             const humanPlayer = players.find(p => !p.isRobot);
             const playerCardElements = document.querySelectorAll('.player .card');
             
-            if (humanPlayer.cards.length === 2) {
+            if (humanPlayer.folded) {
+                // If player has folded, show empty cards with transparent background
+                playerCardElements.forEach(card => {
+                    card.textContent = '';
+                    card.classList.remove('red-card');
+                    card.style.backgroundImage = 'none';
+                    card.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                    card.style.color = '';
+                });
+            } else if (humanPlayer.cards.length === 2) {
                 playerCardElements[0].textContent = `${humanPlayer.cards[0].value}${humanPlayer.cards[0].suit}`;
                 playerCardElements[1].textContent = `${humanPlayer.cards[1].value}${humanPlayer.cards[1].suit}`;
+                
+                // Reset any background styles from previous games/folds
+                playerCardElements.forEach(card => {
+                    card.style.backgroundImage = '';
+                    card.style.backgroundColor = '';
+                });
                 
                 // Apply color for hearts and diamonds
                 playerCardElements.forEach((cardEl, index) => {
@@ -639,6 +654,9 @@
                 playerCardElements.forEach(card => {
                     card.textContent = '?';
                     card.classList.remove('red-card');
+                    // Reset any background styles
+                    card.style.backgroundImage = '';
+                    card.style.backgroundColor = '';
                 });
             }
             
@@ -719,6 +737,9 @@
             const humanPlayerIndex = players.findIndex(p => !p.isRobot);
             players[humanPlayerIndex].folded = true;
             console.log("Player folds");
+
+            // Immediately update the visual representation of cards
+            updatePlayerCards();
             
             // Check if only one player remains
             const activePlayers = players.filter(p => !p.folded);
@@ -742,7 +763,6 @@
                 // Hide action buttons
                 document.querySelector('.action-buttons').style.display = 'none';
             } else {
-                updatePlayerCards();
                 nextPlayer(); // Move to next player
             }
         }
