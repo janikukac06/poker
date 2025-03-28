@@ -1036,12 +1036,17 @@
                 actionButtons.style.display = 'flex';
             }
             
-            // If it's not player's turn, disable all buttons
+            // If it's not player's turn, hide all buttons
             if (!isPlayerTurn) {
                 document.querySelectorAll('.action-buttons button').forEach(button => {
-                    button.disabled = true;
+                    button.style.display = 'none';
                 });
                 return;
+            } else {
+                // Make sure all buttons are visible by default
+                document.querySelectorAll('.action-buttons button').forEach(button => {
+                    button.style.display = 'inline-block';
+                });
             }
             
             // Get player and highest bet information
@@ -1050,17 +1055,17 @@
             const playerBet = player.bet;
             const amountToCall = highestBet - playerBet;
             
-            // Enable/disable buttons based on context
+            // Show/hide buttons based on context
             const checkButton = document.getElementById('check-button');
             const callButton = document.getElementById('call-button');
             const raiseButton = document.getElementById('raise-button');
             const foldButton = document.getElementById('fold-button');
             
-            // Check button - only enabled if no one has bet more than player
-            checkButton.disabled = playerBet < highestBet;
+            // Check button - only shown if no one has bet more than player
+            checkButton.style.display = playerBet < highestBet ? 'none' : 'inline-block';
             
-            // Call button - only enabled if there's something to call
-            callButton.disabled = playerBet >= highestBet || player.chips < amountToCall;
+            // Call button - only shown if there's something to call and player has enough chips
+            callButton.style.display = (playerBet >= highestBet || player.chips < amountToCall) ? 'none' : 'inline-block';
             
             // Update call button text to show amount
             if (amountToCall > 0) {
@@ -1069,12 +1074,12 @@
                 callButton.textContent = 'Call';
             }
             
-            // Raise button - only enabled if player has enough chips to raise
+            // Raise button - only shown if player has enough chips to raise
             const minRaiseAmount = Math.max(bigBlindAmount, highestBet * 2 - playerBet);
-            raiseButton.disabled = player.chips < minRaiseAmount;
+            raiseButton.style.display = player.chips < minRaiseAmount ? 'none' : 'inline-block';
             
-            // Fold button - only enabled if there's something to fold to
-            foldButton.disabled = highestBet <= playerBet;
+            // Fold button - only shown if there's something to fold to
+            foldButton.style.display = highestBet <= playerBet ? 'none' : 'inline-block';
         }
         
         // Reveal the robot's cards
@@ -1452,7 +1457,6 @@
                     };
                 }
             }
-            
             return { rank: 0 };
         }
         
