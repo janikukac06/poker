@@ -427,23 +427,17 @@
             });
             
             // Small blind
+            potAmount += smallBlindAmount;
             players[smallBlindIndex].chips -= smallBlindAmount;
             players[smallBlindIndex].bet = smallBlindAmount;
             
             // Big blind
+            potAmount += bigBlindAmount;
             players[bigBlindIndex].chips -= bigBlindAmount;
             players[bigBlindIndex].bet = bigBlindAmount;
             
-            // Calculate pot amount
-            potAmount = calculatePotAmount();
-            
             updateChips();
             console.log("Players after placing blinds:", JSON.parse(JSON.stringify(players)));
-        }
-        
-        // Calculate total pot amount from all player bets
-        function calculatePotAmount() {
-            return players.reduce((total, player) => total + player.bet, 0);
         }
         
         // Update the chips display
@@ -467,9 +461,7 @@
             });
             
             // Update pot amount
-            const currentBets = calculatePotAmount();
-            const totalPotDisplay = potAmount + currentBets;
-            document.querySelector('.pot p').textContent = `Pot: ${totalPotDisplay}`;
+            document.querySelector('.pot p').textContent = `Pot: ${potAmount}`;
         }
         
         // Update dealer button position
@@ -529,10 +521,8 @@
                 if (count >= players.length - 1) {
                     const winner = players.find(p => !p.folded);
                     if (winner) {
-                        // Add current bets to pot before awarding to winner
-                        potAmount += calculatePotAmount();
                         const winAmount = potAmount;
-                        winner.chips += potAmount;
+                        winner.chips += winAmount;
                         potAmount = 0;
                         // Reset all player bets
                         players.forEach(player => {
@@ -693,11 +683,9 @@
             const callAmount = highestBet - players[humanPlayerIndex].bet;
             
             // Update chips and bet
+            potAmount += callAmount;
             players[humanPlayerIndex].chips -= callAmount;
             players[humanPlayerIndex].bet = highestBet;
-            
-            // Update pot
-            potAmount = calculatePotAmount();
             
             updateChips();
             console.log("Player calls, new bet:", players[humanPlayerIndex].bet);
@@ -712,11 +700,9 @@
             const amountToAdd = totalBet - players[humanPlayerIndex].bet;
             
             // Update chips and bet
+            potAmount += amountToAdd;
             players[humanPlayerIndex].chips -= amountToAdd;
             players[humanPlayerIndex].bet = totalBet;
-            
-            // Update pot
-            potAmount = calculatePotAmount();
             
             updateChips();
             console.log("Player raises to:", players[humanPlayerIndex].bet);
@@ -732,19 +718,15 @@
             // Check if only one player remains
             const activePlayers = players.filter(p => !p.folded);
             if (activePlayers.length === 1) {
-                // Calculate total pot (including current bets)
-                const currentBets = calculatePotAmount();
-                const totalPotWon = potAmount + currentBets;
-                
                 // Award pot to the remaining player
-                activePlayers[0].chips += totalPotWon;
+                activePlayers[0].chips += potAmount;
                 
                 // Clear the pot
                 potAmount = 0;
                 players.forEach(player => player.bet = 0);
                 
                 updateChips();
-                showGameMessage(`${activePlayers[0].name} wins ${totalPotWon} chips!`);
+                showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
                 console.log("Game over, winner:", activePlayers[0].name);
                 
                 // Disabled buttons until next game
@@ -793,6 +775,7 @@
                     // Raise (30% chance)
                     console.log(`${robot.name} raises`);
                     const raiseAmount = bigBlindAmount;
+                    potAmount += raiseAmount;
                     robot.chips -= raiseAmount;
                     robot.bet += raiseAmount;
                     
@@ -803,7 +786,6 @@
                         }
                     });
                     
-                    potAmount = calculatePotAmount();
                     updateChips();
                     console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
@@ -813,9 +795,9 @@
                 if (callAmount >= robot.chips) {
                     // All-in
                     console.log(`${robot.name} is all-in`);
+                    potAmount += robot.chips;
                     robot.bet += robot.chips;
                     robot.chips = 0;
-                    potAmount = calculatePotAmount();
                     updateChips();
                     console.log("Robot state after going all-in:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
@@ -846,9 +828,9 @@
                 } else if (random < 0.9) {
                     // Call (40% chance if need to call)
                     console.log(`${robot.name} calls ${callAmount}`);
+                    potAmount += callAmount;
                     robot.chips -= callAmount;
                     robot.bet = highestBet;
-                    potAmount = calculatePotAmount();
                     updateChips();
                     console.log("Robot state after calling:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
@@ -859,9 +841,11 @@
                     
                     if (raiseAmount >= robot.chips) {
                         // All-in
+                        potAmount += robot.chips;
                         robot.bet += robot.chips;
                         robot.chips = 0;
                     } else {
+                        potAmount += raiseAmount;
                         robot.chips -= raiseAmount;
                         robot.bet = highestBet + bigBlindAmount;
                     }
@@ -873,7 +857,6 @@
                         }
                     });
                     
-                    potAmount = calculatePotAmount();
                     updateChips();
                     console.log("Robot state after raising:", JSON.parse(JSON.stringify(robot)));
                     nextPlayer();
@@ -884,10 +867,6 @@
         // Advance to the next betting round
         function advanceToNextRound() {
             console.log("advanceToNextRound");
-            // Move bets to pot and reset current bets
-            const currentBets = calculatePotAmount();
-            potAmount += currentBets;
-            console.log("Pot amount after advance to next round:", potAmount);
 
             // Reset current bets and acted flags
             players.forEach(player => {
@@ -1087,8 +1066,6 @@
             
             // For now, just give pot to the player (will implement hand evaluation later)
             const player = players.find(p => !p.isRobot);
-            // Add any remaining bets to pot
-            potAmount += calculatePotAmount();
             const winAmount = potAmount;
             player.chips += potAmount;
             potAmount = 0;
@@ -1100,22 +1077,6 @@
 
             showGameMessage(`${player.name} wins ${winAmount} chips!`);
 
-            /*
-            setTimeout(() => {
-                const randomWinner = Math.random() > 0.5;
-                if (randomWinner) {
-                    showGameMessage("Falatka wins the pot!");
-                    players[0].chips += potAmount;
-                } else {
-                    showGameMessage("Robot wins the pot!");
-                    players[1].chips += potAmount;
-                }
-                potAmount = 0;
-                updateChips();
-                
-                // Do not start a new game automatically
-                // setTimeout(startNewGame, 1500);
-            }, 2000);*/
         }
 
         // Deal the flop (first 3 community cards)
