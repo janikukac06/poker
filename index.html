@@ -2,7 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Falatka Poker</title>
     <style>
         /* Main layout */
@@ -240,6 +240,47 @@
             
             .pot {
                 top: 42%;
+            }
+        }
+        
+        /* Fullscreen button styles */
+        .fullscreen-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        /* Style adjustments for fullscreen mode */
+        :fullscreen, ::backdrop {
+            background-color: #006633;
+        }
+        
+        /* Media queries for mobile */
+        @media screen and (max-width: 914px) {
+            body {
+                height: 100svh; /* Use small viewport height for mobile */
+            }
+            
+            .table {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 2 / 1;
+                border-width: 8px;
+                padding: 10px;
+            }
+            
+            .card {
+                width: 40px;
+                height: 55px;
+                font-size: 20px;
             }
         }
     </style>
@@ -1546,6 +1587,81 @@
         window.onload = function() {
             startNewGame();
         };
+    </script>
+    
+    <!-- Add fullscreen toggle function -->
+    <script>
+        // Fullscreen API functions
+        function toggleFullScreen() {
+            if (!document.fullscreenElement &&    // Standard
+                !document.mozFullScreenElement && // Firefox
+                !document.webkitFullscreenElement && // Chrome, Safari, Opera
+                !document.msFullscreenElement) {  // IE/Edge
+                
+                // Request fullscreen
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                    document.documentElement.mozRequestFullScreen();
+                } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari, Opera
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                    document.documentElement.msRequestFullscreen();
+                }
+                
+                // Update button text
+                document.getElementById('fullscreen-btn').textContent = 'Exit Fullscreen';
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { // Firefox
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { // Chrome, Safari, Opera
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { // IE/Edge
+                    document.msExitFullscreen();
+                }
+                
+                // Update button text
+                document.getElementById('fullscreen-btn').textContent = 'Fullscreen';
+            }
+        }
+        
+        // Listen for fullscreen change events to update button text
+        document.addEventListener('fullscreenchange', updateFullscreenButtonText);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButtonText);
+        
+        function updateFullscreenButtonText() {
+            const button = document.getElementById('fullscreen-btn');
+            if (document.fullscreenElement || 
+                document.webkitFullscreenElement || 
+                document.mozFullScreenElement ||
+                document.msFullscreenElement) {
+                button.textContent = 'Exit Fullscreen';
+            } else {
+                button.textContent = 'Fullscreen';
+            }
+        }
+        
+        // Initialize fullscreen button when document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if Fullscreen API is supported
+            if (document.documentElement.requestFullscreen || 
+                document.documentElement.mozRequestFullScreen || 
+                document.documentElement.webkitRequestFullscreen || 
+                document.documentElement.msRequestFullscreen) {
+                // Create the fullscreen button if supported
+                const fullscreenBtn = document.createElement('button');
+                fullscreenBtn.id = 'fullscreen-btn';
+                fullscreenBtn.className = 'fullscreen-btn';
+                fullscreenBtn.textContent = 'Fullscreen';
+                fullscreenBtn.addEventListener('click', toggleFullScreen);
+                document.body.appendChild(fullscreenBtn);
+            }
+        });
     </script>
 </head>
 <body>
