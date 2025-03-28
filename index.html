@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Póker Tanuló</title>
+    <title>Falatka Poker</title>
     <style>
         /* Main layout */
         body {
@@ -521,15 +521,14 @@
                 if (count >= players.length - 1) {
                     const winner = players.find(p => !p.folded);
                     if (winner) {
-                        const winAmount = potAmount;
-                        winner.chips += winAmount;
-                        potAmount = 0;
+                        winner.chips += potAmount;
                         // Reset all player bets
                         players.forEach(player => {
                             player.bet = 0;
                         });
                         updateChips();
-                        showGameMessage(`${winner.name} wins ${winAmount} chips!`);
+                        showGameMessage(`${winner.name} wins ${potAmount} chips!`);
+                        potAmount = 0;
                         console.log("Game over, everyone folded except:", winner.name);
                         document.querySelector('.action-buttons').style.display = 'none';
                         return;
@@ -837,11 +836,10 @@
                     if (activePlayers.length === 1) {
                         // Award pot to the remaining player
                         activePlayers[0].chips += potAmount;
-                        potAmount = 0;
                         
                         updateChips();
-                        showGameMessage(`${activePlayers[0].name} wins the pot!`);
-                        console.log("Game over, winner:", activePlayers[0].name);
+                        showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
+                        potAmount = 0;
                         
                         // Hide action buttons
                         document.querySelector('.action-buttons').style.display = 'none';
@@ -1470,9 +1468,7 @@
             const winningHand = evaluations[evaluations.length - 1].hand;
             
             // Award pot to winner
-            const winAmount = potAmount;
             winner.chips += potAmount;
-            potAmount = 0;
             
             // Reset all player bets
             players.forEach(p => {
@@ -1480,7 +1476,8 @@
             });
             
             updateChips();
-            showGameMessage(`${winner.name} wins ${winAmount} chips with ${winningHand.name}!`);
+            showGameMessage(`${winner.name} wins ${potAmount} chips with ${winningHand.name}!`);
+            potAmount = 0;
         }
 
         // Deal the flop (first 3 community cards)
