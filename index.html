@@ -1321,8 +1321,6 @@
             }
             
             updateActionButtons();
-            console.log("Advanced to betting round:", currentBettingRound);
-            console.log("Players state:", JSON.parse(JSON.stringify(players)));
         }
         
         // Update action buttons based on game state
@@ -1340,13 +1338,13 @@
             // If it's not player's turn, hide all buttons
             if (!isPlayerTurn) {
                 document.querySelectorAll('.action-buttons button').forEach(button => {
-                    button.style.display = 'none';
+                    button.style.visibility = 'hidden';
                 });
                 return;
             } else {
                 // Make sure all buttons are visible by default and explicitly enabled
                 document.querySelectorAll('.action-buttons button').forEach(button => {
-                    button.style.display = 'inline-block';
+                    button.style.visibility = 'visible';
                     button.disabled = false;
                 });
             }
@@ -1364,14 +1362,14 @@
             const foldButton = document.getElementById('fold-button');
             
             // Check button - only shown if no one has bet more than player
-            checkButton.style.display = playerBet < highestBet ? 'none' : 'inline-block';
-            if (checkButton.style.display !== 'none') {
+            checkButton.style.visibility = playerBet < highestBet ? 'hidden' : 'visible';
+            if (checkButton.style.visibility !== 'hidden') {
                 checkButton.disabled = false;
             }
             
             // Call button - only shown if there's something to call and player has enough chips
-            callButton.style.display = (playerBet >= highestBet || player.chips < amountToCall) ? 'none' : 'inline-block';
-            if (callButton.style.display !== 'none') {
+            callButton.style.visibility = (playerBet >= highestBet || player.chips < amountToCall) ? 'hidden' : 'visible';
+            if (callButton.style.visibility !== 'hidden') {
                 callButton.disabled = false;
             }
             
@@ -1384,14 +1382,14 @@
             
             // Raise button - only shown if player has enough chips to raise
             const minRaiseAmount = Math.max(bigBlindAmount, highestBet * 2 - playerBet);
-            raiseButton.style.display = player.chips < minRaiseAmount ? 'none' : 'inline-block';
-            if (raiseButton.style.display !== 'none') {
+            raiseButton.style.visibility = player.chips < minRaiseAmount ? 'hidden' : 'visible';
+            if (raiseButton.style.visibility !== 'hidden') {
                 raiseButton.disabled = false;
             }
             
             // Fold button - only shown if there's something to fold to
-            foldButton.style.display = highestBet <= playerBet ? 'none' : 'inline-block';
-            if (foldButton.style.display !== 'none') {
+            foldButton.style.visibility = highestBet <= playerBet ? 'hidden' : 'visible';
+            if (foldButton.style.visibility !== 'hidden') {
                 foldButton.disabled = false;
             }
         }
