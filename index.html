@@ -1077,6 +1077,7 @@
             
             if (players[activePlayerIndex].bet >= highestBet) {
                 document.querySelector('.action-buttons').style.visibility = 'hidden';
+                isPlayerTurn = false; // Set to false before updating buttons
                 updateActionButtons();
                 nextPlayer(); // Move to next player's turn
             }
@@ -1094,6 +1095,7 @@
             
             updateChips();
             document.querySelector('.action-buttons').style.visibility = 'hidden';
+            isPlayerTurn = false; // Set to false before updating buttons
             updateActionButtons();
             nextPlayer();
         }
@@ -1111,7 +1113,9 @@
             players[humanPlayerIndex].bet = totalBet;
             
             updateChips();
-            document.querySelector('.action-buttons').style.visibility = 'hidden';updateActionButtons();
+            document.querySelector('.action-buttons').style.visibility = 'hidden';
+            isPlayerTurn = false; // Set to false before updating buttons
+            updateActionButtons();
             nextPlayer(); // Move to next player
         }
         
@@ -1123,6 +1127,7 @@
             updatePlayerCards();
             
             document.querySelector('.action-buttons').style.visibility = 'hidden';
+            isPlayerTurn = false; // Set to false before updating buttons
             updateActionButtons();
             
             // Check if only one player remains
