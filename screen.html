@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Képernyő Mérete</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #screen-size {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Az aktuális képernyőméret:</h1>
+    <p id="screen-size">Betöltés...</p>
+
+    <script>
+        function updateScreenSize() {
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            document.getElementById("screen-size").textContent = `Szélesség: ${width}px, Magasság: ${height}px`;
+        }
+
+        // Frissítés betöltéskor és átméretezéskor
+        window.addEventListener("load", updateScreenSize);
+        window.addEventListener("resize", updateScreenSize);
+    </script>
+
+</body>
+</html>
