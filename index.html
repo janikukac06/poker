@@ -261,7 +261,7 @@
             .card {
                 width: 28px;
                 height: 40px;
-                font-size: 14px;
+                font-size: 18px;
                 border-radius: 3px;
                 box-shadow: 0 1px 2px rgba(0,0,0,0.3);
             }
@@ -271,7 +271,7 @@
             }
             
             .robot, .player {
-                font-size: 10px;
+                font-size: 12px;
                 padding: 5px;
                 width: 90px;
                 border-radius: 5px;
@@ -1003,6 +1003,7 @@
             
             if (players[activePlayerIndex].bet >= highestBet) {
                 console.log("Player checks");
+                document.querySelector('.action-buttons').style.display = 'none';
                 nextPlayer(); // Move to next player's turn
             }
         }
@@ -1019,6 +1020,7 @@
             
             updateChips();
             console.log("Player calls, new bet:", players[humanPlayerIndex].bet);
+            document.querySelector('.action-buttons').style.display = 'none';
             nextPlayer();
         }
         
@@ -1037,26 +1039,24 @@
             updateChips();
             console.log("Player raises to:", players[humanPlayerIndex].bet);
             
+            document.querySelector('.action-buttons').style.display = 'none';
             nextPlayer(); // Move to next player
         }
         
         function playerFold() {
             const humanPlayerIndex = players.findIndex(p => !p.isRobot);
             players[humanPlayerIndex].folded = true;
-            console.log("Player folds");
 
             // Immediately update the visual representation of cards
             updatePlayerCards();
+            
+            document.querySelector('.action-buttons').style.display = 'none';
             
             // Check if only one player remains
             const activePlayers = players.filter(p => !p.folded);
             if (activePlayers.length === 1) {
                 // Award pot to the remaining player
                 activePlayers[0].chips += potAmount;
-                
-                // Clear the pot
-                potAmount = 0;
-                players.forEach(player => player.bet = 0);
                 
                 updateChips();
                 showGameMessage(`${activePlayers[0].name} wins ${potAmount} chips!`);
