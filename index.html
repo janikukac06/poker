@@ -838,7 +838,7 @@
                         showGameMessage(`${winner.name} wins ${potAmount} chips!`);
                         potAmount = 0;
                         console.log("Game over, everyone folded except:", winner.name);
-                        document.querySelector('.action-buttons').style.display = 'none';
+                        document.querySelector('.action-buttons').style.visibility = 'hidden';
                         return;
                     }
                 }
@@ -1003,7 +1003,7 @@
             
             if (players[activePlayerIndex].bet >= highestBet) {
                 console.log("Player checks");
-                document.querySelector('.action-buttons').style.display = 'none';
+                document.querySelector('.action-buttons').style.visibility = 'hidden';
                 nextPlayer(); // Move to next player's turn
             }
         }
@@ -1020,7 +1020,7 @@
             
             updateChips();
             console.log("Player calls, new bet:", players[humanPlayerIndex].bet);
-            document.querySelector('.action-buttons').style.display = 'none';
+            document.querySelector('.action-buttons').style.visibility = 'hidden';
             nextPlayer();
         }
         
@@ -1039,7 +1039,7 @@
             updateChips();
             console.log("Player raises to:", players[humanPlayerIndex].bet);
             
-            document.querySelector('.action-buttons').style.display = 'none';
+            document.querySelector('.action-buttons').style.visibility = 'hidden';
             nextPlayer(); // Move to next player
         }
         
@@ -1050,7 +1050,7 @@
             // Immediately update the visual representation of cards
             updatePlayerCards();
             
-            document.querySelector('.action-buttons').style.display = 'none';
+            document.querySelector('.action-buttons').style.visibility = 'hidden';
             
             // Check if only one player remains
             const activePlayers = players.filter(p => !p.folded);
@@ -1063,7 +1063,7 @@
                 potAmount = 0;
                 
                 // Hide action buttons
-                document.querySelector('.action-buttons').style.display = 'none';
+                document.querySelector('.action-buttons').style.visibility = 'hidden';
             } else {
                 nextPlayer(); // Move to next player
             }
@@ -1145,7 +1145,7 @@
                         potAmount = 0;
                         
                         // Hide action buttons
-                        document.querySelector('.action-buttons').style.display = 'none';
+                        document.querySelector('.action-buttons').style.visibility = 'hidden';
                         
                         return;
                     }
@@ -1249,10 +1249,11 @@
             const actionButtons = document.querySelector('.action-buttons');
             
             if (currentBettingRound === 'none' || currentBettingRound === 'showdown') {
-                actionButtons.style.display = 'none';
+                actionButtons.style.visibility = 'hidden';
                 return;
             } else {
-                actionButtons.style.display = 'flex';
+                actionButtons.style.display = 'flex'; // Ensure flex display is set
+                actionButtons.style.visibility = 'visible';
             }
             
             // If it's not player's turn, hide all buttons
@@ -1762,7 +1763,7 @@
             currentBettingRound = 'showdown';
 
             // Hide action buttons during showdown
-            document.querySelector('.action-buttons').style.display = 'none';
+            document.querySelector('.action-buttons').style.visibility = 'hidden';
 
             // Reveal all robot cards
             revealRobotCards();
@@ -2049,7 +2050,7 @@
     
     <!-- Create a dedicated container for all buttons -->
     <div class="buttons-container">
-        <div class="action-buttons" style="display: none;">
+        <div class="action-buttons" style="visibility: hidden; display: flex;">
             <button id="check-button" onclick="playerCheck()">Check</button>
             <button id="call-button" onclick="playerCall()">Call</button>
             <button id="raise-button" onclick="playerRaise()">Raise</button>
