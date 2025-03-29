@@ -1558,18 +1558,65 @@
                     player,
                     hand: bestHand
                 });
-                console.log(`${player.name}'s hand: ${bestHand.name}`);
+                console.log(`${player.name}'s hand: `, JSON.parse(JSON.stringify(bestHand.name)));
             });
             
             // Sort evaluations by hand strength (descending)
             evaluations.sort((a, b) => compareHands(a.hand, b.hand));
             
-            // The winner is the last player (highest hand)
-            const winner = evaluations[evaluations.length - 1].player;
-            const winningHand = evaluations[evaluations.length - 1].hand;
+            // Check for split pot - find all players with the best hand
+            const bestHandRank = evaluations[evaluations.length - 1].hand;
+            const winners = evaluations.filter(eval => compareHands(eval.hand, bestHandRank) === 0);
             
-            // Award pot to winner
-            winner.chips += potAmount;
+            let message = '';
+            
+            // Handle split pot if there are multiple winners
+            if (winners.length > 1) {
+                // Split the pot evenly
+                const splitAmount = Math.floor(potAmount / winners.length);
+                // Calculate remainder (if any)
+                const remainder = potAmount % winners.length;
+                
+                // Award split amount to each winner
+                winners.forEach(winner => {
+                    winner.player.chips += splitAmount;
+                });
+                
+                // If there's a remainder, give it to the first player after the dealer
+                // (mimics what would happen in a real game)
+                if (remainder > 0) {
+                    // Find the first winner after the dealer position
+                    let remainderWinner = null;
+                    let lowestPositionAfterDealer = Number.MAX_VALUE;
+                    
+                    winners.forEach(winner => {
+                        // Calculate position relative to dealer
+                        const playerIndex = players.indexOf(winner.player);
+                        let relativePos = playerIndex - dealerIndex;
+                        if (relativePos <= 0) {
+                            relativePos += players.length; // Wrap around
+                        }
+                        
+                        if (relativePos < lowestPositionAfterDealer) {
+                            lowestPositionAfterDealer = relativePos;
+                            remainderWinner = winner.player;
+                        }
+                    });
+                    
+                    if (remainderWinner) {
+                        remainderWinner.chips += remainder;
+                        message = `Split pot! ${winners.map(w => w.player.name).join(', ')} split ${potAmount} chips with ${winners[0].hand.name}! ${remainderWinner.name} gets ${remainder} extra chip${remainder > 1 ? 's' : ''}.`;
+                    }
+                } else {
+                    message = `Split pot! ${winners.map(w => w.player.name).join(', ')} split ${potAmount} chips with ${winners[0].hand.name}!`;
+                }
+            } else {
+                // Single winner case (no changes to original logic)
+                const winner = winners[0].player;
+                const winningHand = winners[0].hand;
+                winner.chips += potAmount;
+                message = `${winner.name} wins ${potAmount} chips with ${winningHand.name}!`;
+            }
             
             // Reset all player bets
             players.forEach(p => {
@@ -1577,10 +1624,10 @@
             });
             
             updateChips();
-            showGameMessage(`${winner.name} wins ${potAmount} chips with ${winningHand.name}!`);
+            showGameMessage(message);
             potAmount = 0;
         }
-
+        
         // Deal the flop (first 3 community cards)
         function dealFlop() {
             // Burn a card (discard)
