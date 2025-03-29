@@ -997,7 +997,6 @@
             }
             
             setActivePlayer(nextIndex);
-            console.log("Next player:", nextIndex, "Active player is robot:", players[nextIndex].isRobot);
             
             // If next player is a robot, trigger its action
             if (players[nextIndex].isRobot) {
@@ -1331,7 +1330,6 @@
                 actionButtons.style.visibility = 'hidden';
                 return;
             } else {
-                actionButtons.style.display = 'flex'; // Ensure flex display is set
                 actionButtons.style.visibility = 'visible';
             }
             
@@ -2129,7 +2127,7 @@
     
     <!-- Create a dedicated container for all buttons -->
     <div class="buttons-container">
-        <div class="action-buttons" style="visibility: hidden; display: flex;">
+        <div class="action-buttons" style="visibility: hidden;">
             <button id="check-button" onclick="playerCheck()">Check</button>
             <button id="call-button" onclick="playerCall()">Call</button>
             <button id="raise-button" onclick="playerRaise()">Raise</button>
@@ -2255,6 +2253,7 @@
             </div>
         </div>
     </div>
+    
     <div class="game-message"></div>
     <script>
         function toggleHandGuide() {
