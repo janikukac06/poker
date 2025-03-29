@@ -550,6 +550,87 @@
 
         #fold-button { background-color: #993333; }
         #fold-button:hover { background-color: #aa4444; }
+        
+        /* Poker hand guide styles */
+        .poker-hands-guide {
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .guide-toggle {
+            background-color: #336699;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .guide-toggle:hover {
+            background-color: #4477aa;
+        }
+        
+        .hand-rankings {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            color: white;
+            font-size: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .hand-rankings h3 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .hand-example {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hand-example h4 {
+            margin-top: 0;
+            font-size: 14px;
+        }
+        
+        .hand-example p {
+            margin: 2px 0;
+            font-size: 11px;
+            color: #cccccc;
+        }
+
+        .example-cards {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-top: 3px;
+        }
+        
+        .example-card {
+            width: 40px;
+            height: 60px;
+            background-color: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        
+        .example-card.red-card {
+            color: red !important;
+        }
     </style>
     <script>
         // Card definitions
@@ -2057,7 +2138,139 @@
             <button id="fold-button" onclick="playerFold()">Fold</button>
         </div>
         <button id="new-game-button" onclick="startNewGame()">New Game</button>
+        
+        <!-- Learning section with poker hand rankings -->
+        <div class="poker-hands-guide">
+            <button class="guide-toggle" onclick="toggleHandGuide()">Show Hand Rankings</button>
+            <div class="hand-rankings" style="display: none;">
+                <h3>Poker Hand Rankings</h3>
+                <div class="hand-example">
+                    <h4>1. Royal Flush</h4>
+                    <p>A, K, Q, J, 10 of the same suit</p>
+                    <div class="example-cards">
+                        <span class="example-card red-card">A♥</span>
+                        <span class="example-card red-card">K♥</span>
+                        <span class="example-card red-card">Q♥</span>
+                        <span class="example-card red-card">J♥</span>
+                        <span class="example-card red-card">10♥</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>2. Straight Flush</h4>
+                    <p>Five sequential cards of the same suit</p>
+                    <div class="example-cards">
+                        <span class="example-card">9♠</span>
+                        <span class="example-card">8♠</span>
+                        <span class="example-card">7♠</span>
+                        <span class="example-card">6♠</span>
+                        <span class="example-card">5♠</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>3. Four of a Kind</h4>
+                    <p>Four cards of the same rank</p>
+                    <div class="example-cards">
+                        <span class="example-card">8♠</span>
+                        <span class="example-card red-card">8♥</span>
+                        <span class="example-card">8♣</span>
+                        <span class="example-card red-card">8♦</span>
+                        <span class="example-card">K♠</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>4. Full House</h4>
+                    <p>Three of a kind plus a pair</p>
+                    <div class="example-cards">
+                        <span class="example-card">J♠</span>
+                        <span class="example-card red-card">J♥</span>
+                        <span class="example-card">J♣</span>
+                        <span class="example-card">7♠</span>
+                        <span class="example-card red-card">7♥</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>5. Flush</h4>
+                    <p>Five cards of the same suit</p>
+                    <div class="example-cards">
+                        <span class="example-card red-card">A♦</span>
+                        <span class="example-card red-card">J♦</span>
+                        <span class="example-card red-card">9♦</span>
+                        <span class="example-card red-card">5♦</span>
+                        <span class="example-card red-card">2♦</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>6. Straight</h4>
+                    <p>Five sequential cards of any suit</p>
+                    <div class="example-cards">
+                        <span class="example-card">Q♠</span>
+                        <span class="example-card red-card">J♥</span>
+                        <span class="example-card">10♣</span>
+                        <span class="example-card red-card">9♦</span>
+                        <span class="example-card">8♠</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>7. Three of a Kind</h4>
+                    <p>Three cards of the same rank</p>
+                    <div class="example-cards">
+                        <span class="example-card">Q♠</span>
+                        <span class="example-card red-card">Q♥</span>
+                        <span class="example-card">Q♣</span>
+                        <span class="example-card">9♠</span>
+                        <span class="example-card red-card">2♦</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>8. Two Pair</h4>
+                    <p>Two different pairs</p>
+                    <div class="example-cards">
+                        <span class="example-card">A♠</span>
+                        <span class="example-card red-card">A♥</span>
+                        <span class="example-card">6♣</span>
+                        <span class="example-card red-card">6♦</span>
+                        <span class="example-card">K♠</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>9. One Pair</h4>
+                    <p>Two cards of the same rank</p>
+                    <div class="example-cards">
+                        <span class="example-card">10♠</span>
+                        <span class="example-card red-card">10♥</span>
+                        <span class="example-card">K♠</span>
+                        <span class="example-card red-card">5♦</span>
+                        <span class="example-card">2♠</span>
+                    </div>
+                </div>
+                <div class="hand-example">
+                    <h4>10. High Card</h4>
+                    <p>Highest value card</p>
+                    <div class="example-cards">
+                        <span class="example-card red-card">A♥</span>
+                        <span class="example-card">J♠</span>
+                        <span class="example-card">8♣</span>
+                        <span class="example-card red-card">6♦</span>
+                        <span class="example-card">4♠</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="game-message"></div>
+    <script>
+        function toggleHandGuide() {
+            const handGuide = document.querySelector('.hand-rankings');
+            const toggleButton = document.querySelector('.guide-toggle');
+            
+            if (handGuide.style.display === 'none') {
+                handGuide.style.display = 'block';
+                toggleButton.textContent = 'Hide Hand Rankings';
+            } else {
+                handGuide.style.display = 'none';
+                toggleButton.textContent = 'Show Hand Rankings';
+            }
+        }
+    </script>
 </body>
 </html>
